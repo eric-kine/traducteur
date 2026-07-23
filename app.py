@@ -27,9 +27,20 @@ LANGUES = {
     "Italien": "it",
     "Portugais": "pt",
     "Néerlandais": "nl",
+    "Polonais": "pl",
+    "Russe": "ru",
+    "Turc": "tr",
+    "Roumain": "ro",
+    "Grec": "el",
+    "Suédois": "sv",
     "Arabe": "ar",
     "Chinois (simplifié)": "zh-CN",
+    "Japonais": "ja",
+    "Coréen": "ko",
 }
+
+# Codes renvoyés par langdetect -> nom lisible, pour afficher la langue détectée
+CODE_VERS_NOM = {code.split("-")[0]: nom for nom, code in LANGUES.items()}
 
 MAX_BLOC = 4500  # taille max d'un morceau de texte envoyé au traducteur (limite technique du service gratuit)
 
@@ -232,6 +243,57 @@ def _int_vers_rgb(couleur_int):
 
 
 # ---------------------------------------------------------------------------
+# Détection automatique de la langue du document
+# ---------------------------------------------------------------------------
+
+def extraire_echantillon(donnees, extension, taille_max=3000):
+    """Extrait un court échantillon de texte du document pour détecter la langue."""
+    morceaux = []
+    try:
+        if extension == "docx":
+            from docx import Document
+            doc = Document(io.BytesIO(donnees))
+            for p in doc.paragraphs:
+                if p.text.strip():
+                    morceaux.append(p.text)
+                if sum(len(m) for m in morceaux) >= taille_max:
+                    break
+        elif extension == "pptx":
+            from pptx import Presentation
+            prs = Presentation(io.BytesIO(donnees))
+            for slide in prs.slides:
+                for shape in slide.shapes:
+                    if getattr(shape, "has_text_frame", False) and shape.text_frame.text.strip():
+                        morceaux.append(shape.text_frame.text)
+                if sum(len(m) for m in morceaux) >= taille_max:
+                    break
+        elif extension == "pdf":
+            import fitz
+            doc = fitz.open(stream=donnees, filetype="pdf")
+            for page in doc:
+                texte = page.get_text().strip()
+                if texte:
+                    morceaux.append(texte)
+                if sum(len(m) for m in morceaux) >= taille_max:
+                    break
+    except Exception:
+        return ""
+    return " ".join(morceaux)[:taille_max]
+
+
+def detecter_langue(donnees, extension):
+    """Renvoie (code, nom) de la langue détectée, ou (None, None) en cas d'échec."""
+    echantillon = extraire_echantillon(donnees, extension)
+    if not echantillon.strip():
+        return None, None
+    try:
+        code = detect(echantillon)
+    except Exception:
+        return None, None
+    return code, CODE_VERS_NOM.get(code, code)
+
+
+# ---------------------------------------------------------------------------
 # Interface utilisateur
 # ---------------------------------------------------------------------------
 
@@ -241,9 +303,12 @@ st.caption("Word (.docx) · PDF (.pdf) · PowerPoint (.pptx) — gratuit, sans c
 with st.expander("ℹ️ À savoir avant de commencer"):
     st.markdown(
         """
+- La langue du document est **détectée automatiquement**, ou vous pouvez la choisir vous-même.
 - La mise en page (titres, tableaux, puces, images) est **très bien conservée pour Word et PowerPoint**.
 - Pour les **PDF**, le résultat est très correct sur des documents simples (texte + images), mais peut être
-  légèrement imparfait sur des mises en page très complexes (plusieurs colonnes, texte artistique).
+  légèrement imparfait sur des mises en page très complexes (plusieurs colonnes, texte artistique). La sortie
+  d'un PDF vers une écriture non latine (arabe, chinois, japonais, coréen) peut ne pas s'afficher correctement ;
+  pour ces langues, privilégiez les formats Word ou PowerPoint.
 - Les documents volumineux sont traduits automatiquement par petits morceaux : il n'y a pas de limite de taille,
   mais un très gros document peut prendre quelques minutes.
 - Aucune donnée n'est conservée par l'application après la traduction.
@@ -266,29 +331,46 @@ with col2:
 if fichier_televerse is not None:
     extension = fichier_televerse.name.split(".")[-1].lower()
     langue_cible = LANGUES[nom_cible]
+    donnees = fichier_televerse.getvalue()  # octets lus une seule fois
 
     if detection_auto:
         langue_source = "auto"
+        code_detecte, nom_detecte = detecter_langue(donnees, extension)
+        if nom_detecte:
+            st.info(f"🔎 Langue détectée : **{nom_detecte}**")
     else:
         langue_source = LANGUES[nom_source]
+        code_detecte = langue_source
 
-    if st.button("Traduire le document", type="primary"):
+    # On évite de traduire un document vers sa propre langue.
+    meme_langue = (
+        code_detecte is not None
+        and code_detecte.split("-")[0] == langue_cible.split("-")[0]
+    )
+    if meme_langue:
+        st.warning(
+            f"La langue source et la langue de sortie semblent identiques "
+            f"(**{nom_cible}**). Choisissez une autre langue de sortie."
+        )
+
+    if st.button("Traduire le document", type="primary", disabled=meme_langue):
         cache = {}
         barre = st.progress(0.0)
         statut = st.empty()
         statut.write("Traduction en cours, merci de patienter…")
 
         try:
+            source = io.BytesIO(donnees)
             if extension == "docx":
-                resultat = traduire_docx(fichier_televerse, langue_source, langue_cible, barre, cache)
+                resultat = traduire_docx(source, langue_source, langue_cible, barre, cache)
                 nom_sortie = fichier_televerse.name.replace(".docx", f"_{langue_cible}.docx")
                 mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             elif extension == "pptx":
-                resultat = traduire_pptx(fichier_televerse, langue_source, langue_cible, barre, cache)
+                resultat = traduire_pptx(source, langue_source, langue_cible, barre, cache)
                 nom_sortie = fichier_televerse.name.replace(".pptx", f"_{langue_cible}.pptx")
                 mime = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
             elif extension == "pdf":
-                resultat = traduire_pdf(fichier_televerse, langue_source, langue_cible, barre, cache)
+                resultat = traduire_pdf(source, langue_source, langue_cible, barre, cache)
                 nom_sortie = fichier_televerse.name.replace(".pdf", f"_{langue_cible}.pdf")
                 mime = "application/pdf"
             else:
