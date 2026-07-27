@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 320" fill="none">
+  <defs>
+    <linearGradient id="sacA" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eaf6fc"/><stop offset="1" stop-color="#cbe9f6"/></linearGradient>
+    <linearGradient id="sacB" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e3f2fb"/><stop offset="1" stop-color="#b9e0f3"/></linearGradient>
+    <linearGradient id="cubeP" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#a6d9ef"/></linearGradient>
+  </defs>
+  <!-- sac arrière gauche -->
+  <path d="M40 118c0-8 15-13 52-13s52 5 52 13l10 150c1 12-22 22-62 22s-63-10-62-22L40 118z" fill="url(#sacB)" stroke="#9fd4ec" stroke-width="2.5"/>
+  <rect x="64" y="238" width="60" height="26" rx="7" fill="#155f8a"/>
+  <text x="94" y="256" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="700" font-size="13" fill="#fff">ICE LAB</text>
+  <!-- sac arrière droit -->
+  <path d="M156 118c0-8 15-13 52-13s52 5 52 13l10 150c1 12-22 22-62 22s-63-10-62-22L156 118z" fill="url(#sacB)" stroke="#9fd4ec" stroke-width="2.5"/>
+  <rect x="180" y="238" width="60" height="26" rx="7" fill="#155f8a"/>
+  <text x="210" y="256" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="700" font-size="13" fill="#fff">ICE LAB</text>
+  <!-- sac avant centre -->
+  <path d="M98 150c0-9 17-14 58-14s58 5 58 14l11 130c1 13-25 25-69 25s-70-12-69-25L98 150z" fill="url(#sacA)" stroke="#a6d9ef" stroke-width="3"/>
+  <path d="M98 150c0-9 17-14 58-14s58 5 58 14c0 9-25 15-58 15s-58-6-58-15z" fill="#e7f4fb" stroke="#a6d9ef" stroke-width="3"/>
+  <g opacity="0.92">
+    <rect x="118" y="182" width="30" height="30" rx="6" fill="url(#cubeP)" transform="rotate(-8 133 197)"/>
+    <rect x="150" y="176" width="34" height="34" rx="7" fill="url(#cubeP)" transform="rotate(7 167 193)"/>
+    <rect x="132" y="214" width="32" height="32" rx="7" fill="url(#cubeP)" transform="rotate(9 148 230)"/>
+    <rect x="168" y="212" width="30" height="30" rx="6" fill="url(#cubeP)" transform="rotate(-6 183 227)"/>
+  </g>
+  <rect x="116" y="258" width="84" height="34" rx="9" fill="#1e7fb5"/>
+  <text x="158" y="281" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="700" font-size="17" fill="#fff">ICE LAB</text>
+</svg>

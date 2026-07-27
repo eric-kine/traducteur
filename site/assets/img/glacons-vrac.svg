@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 320" fill="none">
+  <defs>
+    <linearGradient id="boite" x1="40" y1="120" x2="260" y2="300" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#eaf6fc"/><stop offset="1" stop-color="#cbe9f6"/>
+    </linearGradient>
+    <linearGradient id="cubeV" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#ffffff"/><stop offset="1" stop-color="#a6d9ef"/>
+    </linearGradient>
+  </defs>
+  <!-- caisse isotherme -->
+  <path d="M50 150l100-40 100 40v110l-100 40-100-40V150z" fill="url(#boite)" stroke="#a6d9ef" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M50 150l100 40 100-40M150 190v150" stroke="#a6d9ef" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M50 150l100-40 100 40-100 40-100-40z" fill="#e7f4fb" stroke="#a6d9ef" stroke-width="3" stroke-linejoin="round"/>
+  <!-- amas de glaçons débordant -->
+  <g opacity="0.95">
+    <rect x="96" y="86" width="34" height="34" rx="7" fill="url(#cubeV)" transform="rotate(-10 113 103)"/>
+    <rect x="134" y="70" width="40" height="40" rx="8" fill="url(#cubeV)" transform="rotate(7 154 90)"/>
+    <rect x="176" y="88" width="34" height="34" rx="7" fill="url(#cubeV)" transform="rotate(-5 193 105)"/>
+    <rect x="118" y="118" width="36" height="36" rx="8" fill="url(#cubeV)" transform="rotate(9 136 136)"/>
+    <rect x="158" y="112" width="38" height="38" rx="8" fill="url(#cubeV)" transform="rotate(-7 177 131)"/>
+  </g>
+  <rect x="104" y="238" width="92" height="40" rx="10" fill="#1e7fb5"/>
+  <text x="150" y="264" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="700" font-size="19" fill="#fff">ICE LAB</text>
+</svg>

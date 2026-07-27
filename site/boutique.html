@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Boutique — Sacs, vrac &amp; packs de glaçons | ICE LAB</title>
+  <meta name="description" content="Catalogue ICE LAB : sacs de glaçons 2 kg et 5 kg, glaçons en vrac 10 kg, packs événementiels, glaçons sphériques premium et glace pilée. Photos, poids, prix et ajout au panier.">
+  <meta name="keywords" content="glaçons, acheter glaçons, sac de glaçons, glaçons en vrac, glace pilée, glaçons sphériques, pack événementiel, ICE LAB">
+  <meta name="theme-color" content="#1e7fb5">
+  <link rel="canonical" href="https://www.icelab.fr/boutique.html">
+  <link rel="icon" type="image/svg+xml" href="assets/img/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+  <header class="entete">
+    <div class="conteneur entete__barre">
+      <a href="index.html" class="logo" aria-label="ICE LAB — retour à l'accueil">
+        <img src="assets/img/logo.svg" alt="Logo ICE LAB" width="40" height="40">
+        <span class="logo__texte">ICE&nbsp;<span>LAB</span></span>
+      </a>
+      <nav class="nav" id="nav-principal" aria-label="Navigation principale">
+        <a href="index.html">Accueil</a>
+        <a href="boutique.html" class="actif">Boutique</a>
+        <a href="livraison.html">Livraison</a>
+        <a href="a-propos.html">À propos</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+      <div class="entete__actions">
+        <button class="panier-btn" data-ouvrir-panier aria-label="Ouvrir le panier">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="lbl">Panier</span>
+          <span class="panier-compte" style="display:none">0</span>
+        </button>
+        <button class="menu-toggle" id="menu-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section class="page-hero">
+    <div class="conteneur">
+      <p class="fil-ariane"><a href="index.html">Accueil</a> › Boutique</p>
+      <h1>Notre boutique</h1>
+      <p>Des glaçons de qualité laboratoire pour chaque occasion. Choisissez la quantité, ajoutez au panier, on s'occupe du froid.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="conteneur">
+      <div class="grille-produits" id="grille-produits"></div>
+      <p class="centre form-note mt-2">🚚 Livraison offerte dès 30 € d'achat · Chaîne du froid garantie jusqu'à votre porte.</p>
+    </div>
+  </section>
+
+  <footer class="pied">
+    <div class="conteneur">
+      <div class="pied__grille">
+        <div>
+          <a href="index.html" class="logo" aria-label="ICE LAB">
+            <img src="assets/img/logo.svg" alt="Logo ICE LAB" width="36" height="36">
+            <span class="logo__texte">ICE&nbsp;<span>LAB</span></span>
+          </a>
+          <p style="margin-top:1rem;max-width:34ch;">La fraîcheur livrée chez vous. Glaçons de qualité laboratoire, livrés au frais partout en France.</p>
+          <div class="pied__social">
+            <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><line x1="17.5" y1="6.5" x2="17.5" y2="6.5"/></svg></a>
+            <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            <a href="#" aria-label="TikTok"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8.2a6.3 6.3 0 0 0 3.7 1.2V6.7a3.6 3.6 0 0 1-2-.8 3.6 3.6 0 0 1-1.6-2.9h-2.8v11.4a2.3 2.3 0 1 1-2.3-2.3c.24 0 .47.04.7.1V9.4a5.2 5.2 0 1 0 4.6 5.1V8.2z"/></svg></a>
+          </div>
+        </div>
+        <div>
+          <h4>Boutique</h4>
+          <ul>
+            <li><a href="boutique.html">Sacs de glaçons</a></li>
+            <li><a href="boutique.html">Glaçons en vrac</a></li>
+            <li><a href="boutique.html">Packs événementiels</a></li>
+            <li><a href="boutique.html">Glaçons premium</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Aide</h4>
+          <ul>
+            <li><a href="livraison.html">Livraison</a></li>
+            <li><a href="contact.html#faq">FAQ</a></li>
+            <li><a href="contact.html">Nous contacter</a></li>
+            <li><a href="a-propos.html">À propos</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Contact</h4>
+          <ul>
+            <li><a href="tel:+33184800000">01 84 80 00 00</a></li>
+            <li><a href="mailto:bonjour@icelab.fr">bonjour@icelab.fr</a></li>
+            <li>Lun–Dim · 8h – 22h</li>
+          </ul>
+        </div>
+      </div>
+      <div class="pied__bas">
+        <span>© <span data-annee>2026</span> ICE LAB — Tous droits réservés.</span>
+        <span>Mentions légales · CGV · Confidentialité</span>
+      </div>
+    </div>
+  </footer>
+
+  <div class="overlay" id="overlay"></div>
+  <aside class="tiroir" id="tiroir" aria-label="Panier d'achat">
+    <div class="tiroir__entete">
+      <h3>Votre panier</h3>
+      <button class="tiroir__fermer" id="tiroir-fermer" aria-label="Fermer le panier">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="tiroir__corps" id="tiroir-corps"></div>
+    <div class="tiroir__pied" id="tiroir-pied" hidden>
+      <p id="tiroir-livraison" class="form-note" style="text-align:center;margin-bottom:.75rem;"></p>
+      <div class="tiroir__total"><span>Sous-total</span><span id="tiroir-total">0 €</span></div>
+      <a href="commande.html" class="btn btn--primaire btn--large">Passer commande</a>
+    </div>
+  </aside>
+
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

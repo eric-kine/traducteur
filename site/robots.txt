@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /commande.html
+
+Sitemap: https://www.icelab.fr/sitemap.xml

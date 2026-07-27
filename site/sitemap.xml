@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://www.icelab.fr/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://www.icelab.fr/boutique.html</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://www.icelab.fr/livraison.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.icelab.fr/a-propos.html</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.icelab.fr/contact.html</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+</urlset>

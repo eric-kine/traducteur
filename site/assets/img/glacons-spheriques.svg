@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 320" fill="none">
+  <defs>
+    <radialGradient id="sph" cx="0.35" cy="0.3" r="0.8">
+      <stop stop-color="#ffffff"/><stop offset="0.6" stop-color="#dcefFA"/><stop offset="1" stop-color="#9fd4ec"/>
+    </radialGradient>
+    <linearGradient id="verre" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#eaf6fc" stop-opacity="0.9"/><stop offset="1" stop-color="#cbe9f6" stop-opacity="0.5"/>
+    </linearGradient>
+  </defs>
+  <!-- verre à whisky -->
+  <path d="M92 120h116l-10 150c-1 14-20 24-48 24s-47-10-48-24L92 120z" fill="url(#verre)" stroke="#a6d9ef" stroke-width="3" stroke-linejoin="round"/>
+  <ellipse cx="150" cy="120" rx="58" ry="14" fill="#e7f4fb" stroke="#a6d9ef" stroke-width="3"/>
+  <!-- liquide -->
+  <path d="M104 190c8 6 30 10 46 10s38-4 46-10l-6 80c-1 12-18 20-40 20s-39-8-40-20l-6-80z" fill="#cfa25a" fill-opacity="0.35"/>
+  <!-- sphères de glace -->
+  <circle cx="132" cy="196" r="34" fill="url(#sph)" stroke="#bfe3f4" stroke-width="1.5"/>
+  <circle cx="122" cy="184" r="9" fill="#fff" fill-opacity="0.85"/>
+  <circle cx="176" cy="212" r="26" fill="url(#sph)" stroke="#bfe3f4" stroke-width="1.5"/>
+  <circle cx="168" cy="203" r="7" fill="#fff" fill-opacity="0.85"/>
+  <rect x="102" y="286" width="96" height="14" rx="7" fill="#1e7fb5" opacity="0.15"/>
+</svg>

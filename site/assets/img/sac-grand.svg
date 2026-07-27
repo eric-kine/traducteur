@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 320" fill="none">
+  <defs>
+    <linearGradient id="sac2" x1="55" y1="40" x2="245" y2="300" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e3f2fb"/><stop offset="1" stop-color="#b9e0f3"/>
+    </linearGradient>
+    <linearGradient id="cube2" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#ffffff"/><stop offset="1" stop-color="#9fd4ec"/>
+    </linearGradient>
+  </defs>
+  <path d="M66 66c0-11 24-18 84-18s84 7 84 18l16 214c1 17-34 32-100 32s-101-15-100-32L66 66z" fill="url(#sac2)" stroke="#9fd4ec" stroke-width="3"/>
+  <path d="M66 66c0-11 24-18 84-18s84 7 84 18c0 11-36 20-84 20s-84-9-84-20z" fill="#dcefFA" stroke="#9fd4ec" stroke-width="3"/>
+  <rect x="118" y="42" width="64" height="18" rx="6" fill="#c3ccd4"/>
+  <g opacity="0.92">
+    <rect x="86" y="118" width="40" height="40" rx="8" fill="url(#cube2)" transform="rotate(-8 106 138)"/>
+    <rect x="138" y="104" width="44" height="44" rx="9" fill="url(#cube2)" transform="rotate(6 160 126)"/>
+    <rect x="192" y="122" width="38" height="38" rx="8" fill="url(#cube2)" transform="rotate(-5 211 141)"/>
+    <rect x="104" y="170" width="42" height="42" rx="9" fill="url(#cube2)" transform="rotate(9 125 191)"/>
+    <rect x="156" y="162" width="46" height="46" rx="9" fill="url(#cube2)" transform="rotate(-6 179 185)"/>
+    <rect x="116" y="222" width="40" height="40" rx="8" fill="url(#cube2)" transform="rotate(-9 136 242)"/>
+    <rect x="168" y="220" width="40" height="40" rx="8" fill="url(#cube2)" transform="rotate(7 188 240)"/>
+  </g>
+  <rect x="98" y="264" width="104" height="42" rx="10" fill="#155f8a"/>
+  <text x="150" y="291" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="700" font-size="21" fill="#fff">ICE LAB</text>
+</svg>
