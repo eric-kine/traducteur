@@ -6,9 +6,8 @@ Auteur : généré avec Claude pour un usage simple, clé en main.
 
 import io
 import time
-import copy
 import streamlit as st
-from deep_translator import GoogleTranslator
+from deep_translator import GoogleTranslator, MyMemoryTranslator
 from langdetect import detect, DetectorFactory
 
 DetectorFactory.seed = 0  # résultats de détection de langue stables
@@ -27,8 +26,28 @@ LANGUES = {
     "Italien": "it",
     "Portugais": "pt",
     "Néerlandais": "nl",
+    "Polonais": "pl",
+    "Russe": "ru",
+    "Turc": "tr",
+    "Roumain": "ro",
+    "Grec": "el",
+    "Suédois": "sv",
     "Arabe": "ar",
     "Chinois (simplifié)": "zh-CN",
+    "Japonais": "ja",
+    "Coréen": "ko",
+}
+
+# Codes renvoyés par langdetect -> nom lisible, pour afficher la langue détectée
+CODE_VERS_NOM = {code.split("-")[0]: nom for nom, code in LANGUES.items()}
+
+# Correspondance de nos codes ISO vers les codes régionaux exigés par MyMemory
+# (service de secours utilisé quand Google échoue ou renvoie du texte vide).
+MYMEMORY_LOCALES = {
+    "fr": "fr-FR", "en": "en-GB", "de": "de-DE", "es": "es-ES", "it": "it-IT",
+    "pt": "pt-PT", "nl": "nl-NL", "pl": "pl-PL", "ru": "ru-RU", "tr": "tr-TR",
+    "ro": "ro-RO", "el": "el-GR", "sv": "sv-SE", "ar": "ar-SA", "zh-CN": "zh-CN",
+    "ja": "ja-JP", "ko": "ko-KR",
 }
 
 MAX_BLOC = 4500  # taille max d'un morceau de texte envoyé au traducteur (limite technique du service gratuit)
@@ -58,42 +77,122 @@ def decouper_texte(texte, taille_max=MAX_BLOC):
     return morceaux
 
 
-def traduire_texte(texte, langue_source, langue_cible, cache):
-    """Traduit un texte, avec cache pour éviter de retraduire deux fois la même chose."""
-    texte = texte if texte else ""
-    if not texte.strip():
-        return texte
+def _resultat_valide(candidat, original):
+    """Un résultat de traduction est valide s'il n'est pas vide alors que la source ne l'était pas."""
+    if candidat is None:
+        return False
+    if not isinstance(candidat, str):
+        return False
+    if original.strip() and not candidat.strip():
+        return False  # le service a renvoyé du vide pour un texte réel -> échec
+    return True
 
-    if texte in cache:
-        return cache[texte]
 
-    try:
-        src = "auto" if langue_source == "auto" else langue_source
-        traducteur = GoogleTranslator(source=src, target=langue_cible)
-        morceaux = decouper_texte(texte)
+class Traducteur:
+    """
+    Encapsule la traduction avec :
+    - un service principal (Google) et un service de secours (MyMemory) ;
+    - une validation stricte : on ne renvoie JAMAIS de texte vide à la place
+      d'un texte réel (c'est la cause des "documents vides") ;
+    - un cache et un comptage des réussites/échecs pour informer l'utilisateur.
+    """
+
+    def __init__(self, langue_cible, langue_source="auto", source_concrete=None):
+        self.langue_cible = langue_cible
+        self.langue_source = langue_source
+        # Source concrète (code ISO) utilisée par le service de secours, qui
+        # ne comprend pas "auto" : langue détectée ou choisie par l'utilisateur.
+        self.source_concrete = source_concrete
+        self.cache = {}
+        self.nb_ok = 0
+        self.nb_echecs = 0
+        self._google = None
+        self._mymemory = None  # None = pas encore tenté, False = indisponible
+
+    def _google_translate(self, morceau):
+        if self._google is None:
+            self._google = GoogleTranslator(source=self.langue_source, target=self.langue_cible)
+        return self._google.translate(morceau)
+
+    def _mymemory_translate(self, morceau):
+        if self._mymemory is None:
+            src = MYMEMORY_LOCALES.get((self.source_concrete or "").split("-")[0])
+            if self.source_concrete and self.source_concrete not in MYMEMORY_LOCALES:
+                src = MYMEMORY_LOCALES.get(self.source_concrete.split("-")[0])
+            src = MYMEMORY_LOCALES.get(self.source_concrete) or src
+            cible = MYMEMORY_LOCALES.get(self.langue_cible)
+            if not src or not cible:
+                self._mymemory = False  # secours impossible (langue non gérée)
+                return None
+            try:
+                self._mymemory = MyMemoryTranslator(source=src, target=cible)
+            except Exception:
+                self._mymemory = False
+                return None
+        if not self._mymemory:
+            return None
+        return self._mymemory.translate(morceau)
+
+    def _traduire_morceau(self, morceau):
+        """Traduit un morceau ; renvoie None si tous les services échouent."""
+        # 1) Service principal : Google (3 tentatives, résultat validé)
+        for _ in range(3):
+            try:
+                r = self._google_translate(morceau)
+                if _resultat_valide(r, morceau):
+                    return r
+            except Exception:
+                pass
+            time.sleep(1.0)
+        # 2) Service de secours : MyMemory (2 tentatives)
+        for _ in range(2):
+            try:
+                r = self._mymemory_translate(morceau)
+                if _resultat_valide(r, morceau):
+                    return r
+            except Exception:
+                pass
+            time.sleep(1.0)
+        return None
+
+    def traduire(self, texte):
+        """Traduit un texte en conservant l'original si la traduction échoue (jamais de vide)."""
+        texte = texte if texte else ""
+        if not texte.strip():
+            return texte
+        if texte in self.cache:
+            return self.cache[texte]
+
         resultats = []
-        for morceau in morceaux:
-            for tentative in range(3):
-                try:
-                    resultats.append(traducteur.translate(morceau))
-                    break
-                except Exception:
-                    time.sleep(1.5)
+        echec = False
+        for morceau in decouper_texte(texte):
+            if not morceau.strip():
+                resultats.append(morceau)  # espaces/sauts de ligne : conservés tels quels
+                continue
+            traduit = self._traduire_morceau(morceau)
+            if traduit is None:
+                resultats.append(morceau)  # on garde l'original de ce morceau
+                echec = True
             else:
-                resultats.append(morceau)  # en dernier recours, on garde le texte original
-        resultat = "".join(resultats)
-    except Exception:
-        resultat = texte  # si la traduction échoue totalement, on ne casse pas le document
+                resultats.append(traduit)
 
-    cache[texte] = resultat
-    return resultat
+        resultat = "".join(resultats)
+        if not resultat.strip():
+            resultat = texte  # garde-fou ultime : ne jamais renvoyer un texte vide
+
+        if echec:
+            self.nb_echecs += 1
+        else:
+            self.nb_ok += 1
+        self.cache[texte] = resultat
+        return resultat
 
 
 # ---------------------------------------------------------------------------
 # Traduction d'un fichier Word (.docx)
 # ---------------------------------------------------------------------------
 
-def traduire_docx(fichier, langue_source, langue_cible, barre, cache):
+def traduire_docx(fichier, traducteur, barre):
     from docx import Document
 
     doc = Document(fichier)
@@ -112,7 +211,7 @@ def traduire_docx(fichier, langue_source, langue_cible, barre, cache):
     for i, p in enumerate(paragraphes):
         texte_original = p.text
         if texte_original.strip():
-            texte_traduit = traduire_texte(texte_original, langue_source, langue_cible, cache)
+            texte_traduit = traducteur.traduire(texte_original)
             _remplacer_texte_paragraphe(p, texte_traduit)
         barre.progress(min((i + 1) / total, 1.0))
 
@@ -124,6 +223,8 @@ def traduire_docx(fichier, langue_source, langue_cible, barre, cache):
 
 def _remplacer_texte_paragraphe(paragraphe, nouveau_texte):
     """Remplace le texte d'un paragraphe en conservant la mise en forme du premier run."""
+    if not nouveau_texte or not nouveau_texte.strip():
+        return  # sécurité : ne jamais effacer un paragraphe avec du texte vide
     if not paragraphe.runs:
         paragraphe.add_run(nouveau_texte)
         return
@@ -136,7 +237,7 @@ def _remplacer_texte_paragraphe(paragraphe, nouveau_texte):
 # Traduction d'un fichier PowerPoint (.pptx)
 # ---------------------------------------------------------------------------
 
-def traduire_pptx(fichier, langue_source, langue_cible, barre, cache):
+def traduire_pptx(fichier, traducteur, barre):
     from pptx import Presentation
 
     prs = Presentation(fichier)
@@ -151,14 +252,14 @@ def traduire_pptx(fichier, langue_source, langue_cible, barre, cache):
         if shape.has_text_frame:
             for p in shape.text_frame.paragraphs:
                 if p.text.strip():
-                    texte_traduit = traduire_texte(p.text, langue_source, langue_cible, cache)
+                    texte_traduit = traducteur.traduire(p.text)
                     _remplacer_texte_paragraphe(p, texte_traduit)
         elif shape.has_table:
             for ligne in shape.table.rows:
                 for cellule in ligne.cells:
                     for p in cellule.text_frame.paragraphs:
                         if p.text.strip():
-                            texte_traduit = traduire_texte(p.text, langue_source, langue_cible, cache)
+                            texte_traduit = traducteur.traduire(p.text)
                             _remplacer_texte_paragraphe(p, texte_traduit)
         barre.progress(min((i + 1) / total, 1.0))
 
@@ -182,7 +283,7 @@ def _collecter_formes(shape, liste):
 # Traduction d'un fichier PDF
 # ---------------------------------------------------------------------------
 
-def traduire_pdf(fichier, langue_source, langue_cible, barre, cache):
+def traduire_pdf(fichier, traducteur, barre):
     import fitz  # PyMuPDF
 
     donnees = fichier.read()
@@ -204,7 +305,9 @@ def traduire_pdf(fichier, langue_source, langue_cible, barre, cache):
                 taille_police = span_ref.get("size", 11)
                 couleur = span_ref.get("color", 0)
 
-                texte_traduit = traduire_texte(texte_ligne, langue_source, langue_cible, cache)
+                texte_traduit = traducteur.traduire(texte_ligne)
+                if not texte_traduit or not texte_traduit.strip():
+                    continue  # sécurité : on ne masque pas si rien à réécrire
 
                 # On masque le texte original avec un rectangle blanc, puis on écrit la traduction
                 page.draw_rect(rect, color=None, fill=(1, 1, 1))
@@ -232,6 +335,57 @@ def _int_vers_rgb(couleur_int):
 
 
 # ---------------------------------------------------------------------------
+# Détection automatique de la langue du document
+# ---------------------------------------------------------------------------
+
+def extraire_echantillon(donnees, extension, taille_max=3000):
+    """Extrait un court échantillon de texte du document pour détecter la langue."""
+    morceaux = []
+    try:
+        if extension == "docx":
+            from docx import Document
+            doc = Document(io.BytesIO(donnees))
+            for p in doc.paragraphs:
+                if p.text.strip():
+                    morceaux.append(p.text)
+                if sum(len(m) for m in morceaux) >= taille_max:
+                    break
+        elif extension == "pptx":
+            from pptx import Presentation
+            prs = Presentation(io.BytesIO(donnees))
+            for slide in prs.slides:
+                for shape in slide.shapes:
+                    if getattr(shape, "has_text_frame", False) and shape.text_frame.text.strip():
+                        morceaux.append(shape.text_frame.text)
+                if sum(len(m) for m in morceaux) >= taille_max:
+                    break
+        elif extension == "pdf":
+            import fitz
+            doc = fitz.open(stream=donnees, filetype="pdf")
+            for page in doc:
+                texte = page.get_text().strip()
+                if texte:
+                    morceaux.append(texte)
+                if sum(len(m) for m in morceaux) >= taille_max:
+                    break
+    except Exception:
+        return ""
+    return " ".join(morceaux)[:taille_max]
+
+
+def detecter_langue(donnees, extension):
+    """Renvoie (code, nom) de la langue détectée, ou (None, None) en cas d'échec."""
+    echantillon = extraire_echantillon(donnees, extension)
+    if not echantillon.strip():
+        return None, None
+    try:
+        code = detect(echantillon)
+    except Exception:
+        return None, None
+    return code, CODE_VERS_NOM.get(code, code)
+
+
+# ---------------------------------------------------------------------------
 # Interface utilisateur
 # ---------------------------------------------------------------------------
 
@@ -241,9 +395,12 @@ st.caption("Word (.docx) · PDF (.pdf) · PowerPoint (.pptx) — gratuit, sans c
 with st.expander("ℹ️ À savoir avant de commencer"):
     st.markdown(
         """
+- La langue du document est **détectée automatiquement**, ou vous pouvez la choisir vous-même.
 - La mise en page (titres, tableaux, puces, images) est **très bien conservée pour Word et PowerPoint**.
 - Pour les **PDF**, le résultat est très correct sur des documents simples (texte + images), mais peut être
-  légèrement imparfait sur des mises en page très complexes (plusieurs colonnes, texte artistique).
+  légèrement imparfait sur des mises en page très complexes (plusieurs colonnes, texte artistique). La sortie
+  d'un PDF vers une écriture non latine (arabe, chinois, japonais, coréen) peut ne pas s'afficher correctement ;
+  pour ces langues, privilégiez les formats Word ou PowerPoint.
 - Les documents volumineux sont traduits automatiquement par petits morceaux : il n'y a pas de limite de taille,
   mais un très gros document peut prendre quelques minutes.
 - Aucune donnée n'est conservée par l'application après la traduction.
@@ -266,29 +423,52 @@ with col2:
 if fichier_televerse is not None:
     extension = fichier_televerse.name.split(".")[-1].lower()
     langue_cible = LANGUES[nom_cible]
+    donnees = fichier_televerse.getvalue()  # octets lus une seule fois
 
     if detection_auto:
         langue_source = "auto"
+        code_detecte, nom_detecte = detecter_langue(donnees, extension)
+        if nom_detecte:
+            st.info(f"🔎 Langue détectée : **{nom_detecte}**")
     else:
         langue_source = LANGUES[nom_source]
+        code_detecte = langue_source
 
-    if st.button("Traduire le document", type="primary"):
-        cache = {}
+    # On évite de traduire un document vers sa propre langue.
+    meme_langue = (
+        code_detecte is not None
+        and code_detecte.split("-")[0] == langue_cible.split("-")[0]
+    )
+    if meme_langue:
+        st.warning(
+            f"La langue source et la langue de sortie semblent identiques "
+            f"(**{nom_cible}**). Choisissez une autre langue de sortie."
+        )
+
+    if st.button("Traduire le document", type="primary", disabled=meme_langue):
+        # Source concrète pour le service de secours (MyMemory ne comprend pas "auto").
+        source_concrete = code_detecte if code_detecte not in (None, "auto") else None
+        traducteur = Traducteur(
+            langue_cible=langue_cible,
+            langue_source=langue_source,
+            source_concrete=source_concrete,
+        )
         barre = st.progress(0.0)
         statut = st.empty()
         statut.write("Traduction en cours, merci de patienter…")
 
         try:
+            source = io.BytesIO(donnees)
             if extension == "docx":
-                resultat = traduire_docx(fichier_televerse, langue_source, langue_cible, barre, cache)
+                resultat = traduire_docx(source, traducteur, barre)
                 nom_sortie = fichier_televerse.name.replace(".docx", f"_{langue_cible}.docx")
                 mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             elif extension == "pptx":
-                resultat = traduire_pptx(fichier_televerse, langue_source, langue_cible, barre, cache)
+                resultat = traduire_pptx(source, traducteur, barre)
                 nom_sortie = fichier_televerse.name.replace(".pptx", f"_{langue_cible}.pptx")
                 mime = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
             elif extension == "pdf":
-                resultat = traduire_pdf(fichier_televerse, langue_source, langue_cible, barre, cache)
+                resultat = traduire_pdf(source, traducteur, barre)
                 nom_sortie = fichier_televerse.name.replace(".pdf", f"_{langue_cible}.pdf")
                 mime = "application/pdf"
             else:
@@ -296,7 +476,25 @@ if fichier_televerse is not None:
                 resultat = None
 
             if resultat is not None:
-                statut.success("Traduction terminée ✅")
+                total = traducteur.nb_ok + traducteur.nb_echecs
+                if total > 0 and traducteur.nb_ok == 0:
+                    # Rien n'a pu être traduit : le service gratuit est bloqué/indisponible.
+                    statut.error(
+                        "❌ La traduction n'a pas pu aboutir : le service de traduction gratuit "
+                        "est momentanément indisponible ou a bloqué la demande (cela arrive lorsque "
+                        "l'application est hébergée en ligne et sollicite beaucoup le service public). "
+                        "Le document ci-dessous est identique à l'original. Réessayez dans quelques "
+                        "minutes, ou lancez l'application depuis votre ordinateur."
+                    )
+                elif traducteur.nb_echecs > 0:
+                    statut.warning(
+                        f"⚠️ Traduction terminée, mais {traducteur.nb_echecs} passage(s) sur "
+                        f"{total} n'ont pas pu être traduits et ont été conservés dans la langue "
+                        f"d'origine (limite temporaire du service gratuit)."
+                    )
+                else:
+                    statut.success("Traduction terminée ✅")
+
                 st.download_button(
                     "⬇️ Télécharger le document traduit",
                     data=resultat,

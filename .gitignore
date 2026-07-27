@@ -1,0 +1,15 @@
+# Environnements virtuels Python
+.venv/
+venv/
+env/
+
+# Fichiers compilés Python
+__pycache__/
+*.py[cod]
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Documents de test éventuels
+*.tmp
