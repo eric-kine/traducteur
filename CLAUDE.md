@@ -6,7 +6,7 @@ This file provides guidance to Claude Code when working in this workspace.
 
 ## What This Is
 
-Ce workspace est le Jarvis personnel de [VOTRE NOM]. Il a été créé avec le Jarvis Starter Kit pour servir d'assistant IA personnel au quotidien.
+Ce workspace est le Jarvis personnel d'Eric. Il a été créé avec le Jarvis Starter Kit pour servir d'assistant IA personnel au quotidien.
 
 **Ce fichier (CLAUDE.md) est la fondation.** Il est automatiquement chargé au début de chaque session. Gardez-le à jour, c'est la source de vérité unique sur la façon dont Claude doit comprendre et opérer dans ce workspace.
 
@@ -14,10 +14,13 @@ Ce workspace est le Jarvis personnel de [VOTRE NOM]. Il a été créé avec le J
 
 ## Who I Am
 
-> Cette section sera remplie automatiquement lors de l'installation initiale via le module `/install module-installs/jarvis-install`.
-> Elle peut ensuite évoluer au fil du temps quand votre situation change.
+Je m'appelle Eric et je vis à Yaoundé, au Cameroun. Je suis kinésithérapeute et surtout enseignant formateur en kinésithérapie, c'est mon activité principale en temps. En parallèle, je développe une orientation entrepreneuriale (import-revente depuis la Chine) et j'ai démarré un DBA au Collège de Paris (ESTIAM).
 
-[À REMPLIR PAR LE MODULE D'INSTALLATION]
+Mes objectifs prioritaires actuels sont de rentabiliser mon activité d'import (machine pondeuse à glaçons), de cadrer la problématique de mon DBA, et de poser les bases techniques de mon application d'analyse d'imagerie du rachis.
+
+À long terme, je veux soutenir mon DBA et devenir une référence sur les politiques de santé en kinésithérapie au Cameroun, avec une première version fonctionnelle de mon application d'imagerie utilisée par des kinés.
+
+Le domaine où j'ai besoin du plus d'aide en ce moment : la création de contenu pédagogique, l'apprentissage et la méthodologie de recherche pour mon DBA, et la conception de mon application d'imagerie.
 
 ---
 
