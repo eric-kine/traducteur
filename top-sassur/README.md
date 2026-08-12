@@ -76,6 +76,10 @@ serveur avec base de données, comptes patients + admin sécurisés, données pa
 entre appareils, reçus PDF côté serveur et paiements Orange Money / MTN Mobile Money
 branchables (via l'agrégateur Campay). Voir [`server/README.md`](server/README.md).
 
+**Mise en ligne en un clic** (guide complet : [`server/DEPLOY.md`](server/DEPLOY.md)) :
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/eric-kine/traducteur)
+
 | | Démo (ce dossier) | Production (`server/`) |
 |---|---|---|
 | Lancement | double-clic sur `standalone.html` | `python server.py` |

@@ -11,6 +11,16 @@ recommandée pour débuter (gratuite).**
 
 ## Option 1 — Render (recommandée, gratuite pour commencer)
 
+### Le plus rapide : bouton « Deploy to Render »
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/eric-kine/traducteur)
+
+Cliquez sur le bouton ci-dessus : Render vous demande de vous connecter (via GitHub),
+lit automatiquement `render.yaml`, vous fait saisir le mot de passe administrateur,
+puis déploie. C'est la méthode en un clic.
+
+### Ou pas à pas (si vous préférez)
+
 1. Créez un compte sur **https://render.com** (connexion avec GitHub).
 2. Assurez-vous que ce projet est bien sur votre compte GitHub (c'est déjà le cas :
    dépôt `eric-kine/traducteur`).
