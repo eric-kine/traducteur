@@ -13,6 +13,10 @@ n'importe quel téléphone, et l'administrateur voit toute l'activité en temps 
 - **Paiements** : mode *sandbox* (simulation) activé par défaut, et intégration
   réelle **Campay** (Orange Money + MTN Mobile Money) prête à brancher.
 - **Reçus PDF** générés côté serveur.
+- **Fidélité / gamification** : points, niveaux et badges débloqués au fil des
+  séances suivies (pour encourager la régularité des soins).
+- **Témoignages patients** (intégration sociale) : les patients partagent leur
+  expérience, affichée sur la page d'accueil pour renforcer la confiance.
 - L'interface web complète est servie par le serveur (même design que la démo).
 
 ## Démarrage rapide
@@ -103,4 +107,12 @@ server/
 ```
 
 La base `topsassur.db` est créée automatiquement au premier lancement, avec des
-établissements partenaires d'exemple.
+établissements partenaires et quelques témoignages d'exemple.
+
+## Nouvelles API
+
+| Méthode | Route | Accès | Rôle |
+|---|---|---|---|
+| `GET` | `/api/testimonials` | public | Liste des témoignages approuvés |
+| `POST` | `/api/testimonials` | patient | Publier un témoignage (note + texte + ville) |
+| `GET` | `/api/patient/rewards` | patient | Points, niveau et badges de fidélité |

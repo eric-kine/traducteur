@@ -281,6 +281,48 @@ main{max-width:1080px;margin:0 auto;padding:0 1.2rem 3rem}
   .receipt-actions{display:none}
 }
 
+/* ============ témoignages (intégration sociale) ============ */
+.testi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.1rem;max-width:960px;margin:0 auto}
+.testi{margin:0;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:1.3rem;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:.7rem}
+.testi__stars{color:#f5a623;letter-spacing:2px;font-size:1rem}
+.testi blockquote{margin:0;color:var(--ink);font-size:.95rem;line-height:1.5}
+.testi figcaption{display:flex;align-items:center;gap:.6rem;margin-top:auto}
+.testi__ava{width:38px;height:38px;border-radius:50%;background:var(--gr);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex:none}
+.testi figcaption strong{display:block;color:var(--green-900);font-size:.9rem}
+.testi figcaption em{font-style:normal;color:var(--muted);font-size:.78rem}
+
+/* ============ gamification (récompenses) ============ */
+.patient-grid{grid-template-columns:1fr 1fr}
+.panel--rewards{grid-column:1/-1}
+.reward-head{display:flex;gap:1.2rem;align-items:center;flex-wrap:wrap}
+.reward-points{background:var(--gr);color:#fff;border-radius:16px;padding:.9rem 1.2rem;text-align:center;min-width:110px}
+.reward-points strong{display:block;font-size:1.8rem;line-height:1}
+.reward-points span{font-size:.78rem;opacity:.9}
+.reward-level{flex:1;min-width:200px}
+.reward-level__top{display:flex;justify-content:space-between;font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:.35rem}
+.reward-bar{height:14px;border-radius:8px;background:var(--green-50);overflow:hidden}
+.reward-bar>span{display:block;height:100%;background:var(--gr);border-radius:8px;transition:width .4s}
+.reward-next{margin:.9rem 0 .3rem;font-size:.88rem;color:var(--muted)}
+.reward-next strong{color:var(--green-800)}
+.reward-badges-h{margin:1rem 0 .6rem;color:var(--green-900);font-size:.95rem}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.7rem}
+.badge-card{position:relative;border:1.5px solid var(--line);border-radius:14px;padding:.9rem .7rem;text-align:center;background:#fff;transition:.15s}
+.badge-card.on{border-color:var(--green-400);background:var(--green-50)}
+.badge-card.off{opacity:.55;filter:grayscale(.6)}
+.badge-card .badge-ic{font-size:1.7rem;display:block;margin-bottom:.3rem}
+.badge-card strong{display:block;color:var(--green-900);font-size:.82rem}
+.badge-card small{display:block;color:var(--muted);font-size:.68rem;margin-top:.2rem;line-height:1.3}
+.badge-tick{position:absolute;top:6px;right:8px;color:var(--green-700);font-weight:800}
+.badge-prog{position:absolute;top:6px;right:8px;color:var(--muted);font-size:.7rem;font-weight:700}
+
+/* ============ formulaire témoignage ============ */
+.panel--testi{grid-column:1/-1}
+.panel--testi textarea{width:100%;padding:.7rem .9rem;border:1.5px solid var(--line);border-radius:10px;font-size:.95rem;font-family:inherit;resize:vertical;background:#fff}
+.panel--testi textarea:focus{outline:none;border-color:var(--green-500)}
+.star-pick{display:flex;gap:.2rem}
+.star-pick .star{border:0;background:transparent;font-size:1.6rem;color:#d6ddd6;line-height:1;padding:0 .05rem}
+.star-pick .star.on{color:#f5a623}
+
 </style>
 </head>
 <body>
@@ -356,6 +398,12 @@ main{max-width:1080px;margin:0 auto;padding:0 1.2rem 3rem}
       <div class="section section--alt">
         <h2 data-i18n="domains.title">Domaines pris en charge</h2>
         <div class="chips-grid" id="domainsGrid"></div>
+      </div>
+
+      <div class="section" id="testimonials">
+        <h2 data-i18n="testi.title">Ils nous font confiance</h2>
+        <p class="section__lead" data-i18n="testi.lead">Des patients du secteur informel racontent leur expérience.</p>
+        <div class="testi-grid" id="testiGrid"></div>
       </div>
 
       <div class="section cta-band">
@@ -438,13 +486,22 @@ main{max-width:1080px;margin:0 auto;padding:0 1.2rem 3rem}
     <section class="view" data-view="patient" hidden>
       <h2 data-i18n="patient.title">Espace patient</h2>
       <div class="patient-grid">
-        <div class="panel">
-          <h3 data-i18n="patient.history">Historique des rendez-vous</h3>
-          <div id="patientHistory"></div>
+        <div class="panel panel--rewards">
+          <h3 data-i18n="rewards.title">Mes récompenses</h3>
+          <div id="rewardsBox"></div>
         </div>
         <div class="panel">
           <h3 data-i18n="patient.tracking">Suivi des zones douloureuses</h3>
           <div id="painTracking"></div>
+        </div>
+        <div class="panel">
+          <h3 data-i18n="patient.history">Historique des rendez-vous</h3>
+          <div id="patientHistory"></div>
+        </div>
+        <div class="panel panel--testi">
+          <h3 data-i18n="testi.share">Partager mon expérience</h3>
+          <p class="hint" data-i18n="testi.shareHint">Votre témoignage encourage d'autres patients à se soigner.</p>
+          <div id="testiFormBox"></div>
         </div>
       </div>
     </section>
@@ -561,7 +618,17 @@ main{max-width:1080px;margin:0 auto;padding:0 1.2rem 3rem}
       "stat.partners": "Partenaires", "stat.home": "Soins à domicile",
       "patient.empty": "Aucun rendez-vous pour l'instant.",
       "pdf": "Reçu PDF", "again": "Reprendre RDV",
-      "guest": "Patient invité"
+      "guest": "Patient invité",
+      "testi.title": "Ils nous font confiance", "testi.lead": "Des patients du secteur informel racontent leur expérience.",
+      "testi.empty": "Soyez le premier à partager votre expérience.",
+      "testi.share": "Partager mon expérience", "testi.shareHint": "Votre témoignage encourage d'autres patients à se soigner.",
+      "testi.rating": "Votre note", "testi.city": "Ville (facultatif)", "testi.name": "Votre nom (facultatif)",
+      "testi.placeholder": "Racontez votre expérience avec Top S'ASSUR…",
+      "testi.submit": "Publier mon témoignage", "testi.thanks": "Merci pour votre témoignage ✓",
+      "testi.needText": "Écrivez au moins 10 caractères.",
+      "rewards.title": "Mes récompenses", "rewards.points": "points", "rewards.level": "Niveau",
+      "rewards.sessions": "séances suivies", "rewards.next": "Prochain palier",
+      "rewards.badges": "Mes badges", "rewards.empty": "Réservez et suivez vos séances pour débloquer des badges."
     },
     en: {
       "brand.tagline": "Health Insurance",
@@ -623,7 +690,17 @@ main{max-width:1080px;margin:0 auto;padding:0 1.2rem 3rem}
       "stat.partners": "Partners", "stat.home": "Home care",
       "patient.empty": "No appointments yet.",
       "pdf": "PDF receipt", "again": "Book again",
-      "guest": "Guest patient"
+      "guest": "Guest patient",
+      "testi.title": "They trust us", "testi.lead": "Informal-sector patients share their experience.",
+      "testi.empty": "Be the first to share your experience.",
+      "testi.share": "Share my experience", "testi.shareHint": "Your story encourages other patients to seek care.",
+      "testi.rating": "Your rating", "testi.city": "City (optional)", "testi.name": "Your name (optional)",
+      "testi.placeholder": "Tell us about your experience with Top S'ASSUR…",
+      "testi.submit": "Publish my testimonial", "testi.thanks": "Thank you for your testimonial ✓",
+      "testi.needText": "Write at least 10 characters.",
+      "rewards.title": "My rewards", "rewards.points": "points", "rewards.level": "Level",
+      "rewards.sessions": "sessions completed", "rewards.next": "Next tier",
+      "rewards.badges": "My badges", "rewards.empty": "Book and complete sessions to unlock badges."
     }
   };
 
@@ -686,6 +763,24 @@ main{max-width:1080px;margin:0 auto;padding:0 1.2rem 3rem}
   if (!facilities) { facilities = DEFAULT_FACILITIES; store.set("ts_facilities", facilities); }
   let appointments = store.get("ts_appointments", []);
   let notifications = store.get("ts_notifs", []);
+  const SEED_TESTIMONIALS = [
+    { name: "Marlyse T.", rating: 5, city: "Douala",
+      body: "Après mon accouchement, la rééducation périnéale était trop chère. Avec Top S'ASSUR j'ai payé en Mobile Money et pris rendez-vous en 2 minutes." },
+    { name: "Boris N.", rating: 5, city: "Yaoundé",
+      body: "Chauffeur de taxi, j'ai des douleurs de dos chroniques. Les séances à domicile m'ont évité de fermer boutique une journée. Merci !" },
+    { name: "Aïcha M.", rating: 4, city: "Bafoussam",
+      body: "Simple à utiliser et le reçu PDF est accepté directement à la clinique. Enfin une solution pensée pour nous." }
+  ];
+  let testimonials = store.get("ts_testimonials", null);
+  if (!testimonials) { testimonials = SEED_TESTIMONIALS.slice(); store.set("ts_testimonials", testimonials); }
+
+  /* ---------------- gamification (badges) ---------------- */
+  const BADGES = [
+    { id: "first", threshold: 1, icon: "🌱", fr: ["Premier pas", "Votre toute première séance de soins."], en: ["First step", "Your very first care session."] },
+    { id: "ontrack", threshold: 3, icon: "🚶", fr: ["Sur la bonne voie", "3 séances suivies — la régularité paie."], en: ["On track", "3 sessions done — consistency pays off."] },
+    { id: "dedicated", threshold: 5, icon: "🔥", fr: ["Assidu·e", "5 séances : vous prenez soin de vous."], en: ["Dedicated", "5 sessions: you take care of yourself."] },
+    { id: "champion", threshold: 10, icon: "🏆", fr: ["Champion·ne du soin", "10 séances — un vrai parcours de rééducation."], en: ["Care champion", "10 sessions — a true rehab journey."] }
+  ];
 
   /* ---------------- booking state ---------------- */
   const state = {
@@ -740,6 +835,9 @@ main{max-width:1080px;margin:0 auto;padding:0 1.2rem 3rem}
   }
 
   /* ---------------- HOME ---------------- */
+  const stars = (n) => "★★★★★☆☆☆☆☆".slice(5 - n, 10 - n);
+  const escapeHtml = (s) => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
   function renderHome() {
     const wrap = $("#benefits"); wrap.innerHTML = "";
     BENEFITS.forEach(b => {
@@ -750,6 +848,20 @@ main{max-width:1080px;margin:0 auto;padding:0 1.2rem 3rem}
     BENEFITS.forEach(b => {
       const [title] = b[lang];
       grid.appendChild(el("div", "domain", `<span class="ic">${b.ic}</span><strong>${title}</strong>`));
+    });
+    renderTestimonials();
+  }
+  function renderTestimonials() {
+    const grid = $("#testiGrid"); if (!grid) return;
+    if (!testimonials.length) { grid.innerHTML = `<p class="empty">${t("testi.empty")}</p>`; return; }
+    grid.innerHTML = "";
+    testimonials.slice(0, 6).forEach(x => {
+      const initial = (x.name || "?").trim().charAt(0).toUpperCase();
+      grid.appendChild(el("figure", "testi",
+        `<div class="testi__stars" aria-label="${x.rating}/5">${stars(x.rating)}</div>
+         <blockquote>“${escapeHtml(x.body)}”</blockquote>
+         <figcaption><span class="testi__ava">${initial}</span>
+           <span><strong>${escapeHtml(x.name)}</strong>${x.city ? `<em>📍 ${escapeHtml(x.city)}</em>` : ""}</span></figcaption>`));
     });
   }
 
@@ -1126,6 +1238,8 @@ main{max-width:1080px;margin:0 auto;padding:0 1.2rem 3rem}
 
   /* ---------------- PATIENT SPACE ---------------- */
   function renderPatient() {
+    renderRewards();
+    renderTestiForm();
     const hist = $("#patientHistory");
     if (!appointments.length) { hist.innerHTML = `<p class="empty">${t("patient.empty")}</p>`; }
     else {
@@ -1154,6 +1268,86 @@ main{max-width:1080px;margin:0 auto;padding:0 1.2rem 3rem}
     track.innerHTML = entries.map(([z, c]) =>
       `<div class="bar-label"><span>${zoneName(z)}</span><span>${c}×</span></div>
        <div class="bar"><span style="width:${Math.round(c / max * 100)}%"></span></div>`).join("");
+  }
+
+  /* ---------------- REWARDS (gamification) ---------------- */
+  function computeRewards() {
+    const paid = appointments.length; // en démo, chaque RDV enregistré compte comme séance
+    const homecareUsed = appointments.some(r => r.homecare);
+    const distinctZones = new Set();
+    let wellnessUsed = false;
+    appointments.forEach(r => { (r.zones || []).forEach(z => distinctZones.add(z)); if (r.wellness) wellnessUsed = true; });
+    const points = paid * 50 + (homecareUsed ? 30 : 0);
+    const badges = BADGES.map(b => ({
+      icon: b.icon, title: b[lang][0], desc: b[lang][1],
+      earned: paid >= b.threshold, threshold: b.threshold, progress: Math.min(paid, b.threshold)
+    }));
+    badges.push({ icon: "🏠", title: lang === "fr" ? "Chez soi" : "Home care",
+      desc: lang === "fr" ? "Une séance à domicile réalisée." : "A home-care session completed.",
+      earned: homecareUsed, threshold: 1, progress: homecareUsed ? 1 : 0 });
+    badges.push({ icon: "🧭", title: lang === "fr" ? "Explorateur du corps" : "Body explorer",
+      desc: lang === "fr" ? "Soins sur 3 zones différentes." : "Care on 3 different areas.",
+      earned: distinctZones.size >= 3, threshold: 3, progress: Math.min(distinctZones.size, 3) });
+    badges.push({ icon: "🌿", title: lang === "fr" ? "Bien-être" : "Wellness",
+      desc: lang === "fr" ? "Une séance de bien-être corporel." : "A body-wellness session.",
+      earned: wellnessUsed, threshold: 1, progress: wellnessUsed ? 1 : 0 });
+    const level = 1 + Math.floor(points / 200);
+    return { points, level, sessions: paid, levelProgress: points - (level - 1) * 200, levelSpan: 200, badges };
+  }
+  function renderRewards() {
+    const box = $("#rewardsBox"); if (!box) return;
+    const r = computeRewards();
+    const earned = r.badges.filter(b => b.earned);
+    const next = r.badges.find(b => !b.earned);
+    const pct = Math.round((r.levelProgress / r.levelSpan) * 100);
+    box.innerHTML = `
+      <div class="reward-head">
+        <div class="reward-points"><strong>${r.points}</strong><span>${t("rewards.points")}</span></div>
+        <div class="reward-level">
+          <div class="reward-level__top"><span>${t("rewards.level")} ${r.level}</span><span>${r.sessions} ${t("rewards.sessions")}</span></div>
+          <div class="reward-bar"><span style="width:${pct}%"></span></div>
+        </div>
+      </div>
+      ${next ? `<div class="reward-next">${t("rewards.next")} : <strong>${next.icon} ${escapeHtml(next.title)}</strong> — ${next.progress}/${next.threshold}</div>` : ""}
+      <h4 class="reward-badges-h">${t("rewards.badges")} · ${earned.length}/${r.badges.length}</h4>
+      <div class="badges">
+        ${r.badges.map(b => `
+          <div class="badge-card ${b.earned ? "on" : "off"}" title="${escapeHtml(b.desc)}">
+            <span class="badge-ic">${b.icon}</span>
+            <strong>${escapeHtml(b.title)}</strong>
+            <small>${escapeHtml(b.desc)}</small>
+            ${b.earned ? `<span class="badge-tick">✓</span>` : `<span class="badge-prog">${b.progress}/${b.threshold}</span>`}
+          </div>`).join("")}
+      </div>`;
+  }
+
+  /* ---------------- TESTIMONIAL FORM ---------------- */
+  function renderTestiForm() {
+    const box = $("#testiFormBox"); if (!box) return;
+    let rating = 5;
+    box.innerHTML = `
+      <div class="field">
+        <label>${t("testi.rating")}</label>
+        <div class="star-pick" id="starPick">${[1, 2, 3, 4, 5].map(i => `<button type="button" class="star ${i <= rating ? "on" : ""}" data-v="${i}">★</button>`).join("")}</div>
+      </div>
+      <div class="field"><label>${t("testi.name")}</label><input id="tName" placeholder="${lang === "fr" ? "Prénom, initiale…" : "First name, initial…"}"></div>
+      <div class="field"><label>${t("testi.city")}</label><input id="tCity" placeholder="Douala, Yaoundé…"></div>
+      <div class="field"><textarea id="tBody" rows="3" placeholder="${t("testi.placeholder")}"></textarea></div>
+      <button class="btn btn--primary" id="tSubmit">${t("testi.submit")}</button>`;
+    const paint = () => box.querySelectorAll(".star").forEach(s => s.classList.toggle("on", Number(s.dataset.v) <= rating));
+    box.querySelectorAll(".star").forEach(s => s.addEventListener("click", () => { rating = Number(s.dataset.v); paint(); }));
+    $("#tSubmit").addEventListener("click", () => {
+      const body = $("#tBody").value.trim();
+      if (body.length < 10) { toast(t("testi.needText")); return; }
+      const name = $("#tName").value.trim() || t("guest");
+      const city = $("#tCity").value.trim();
+      testimonials.unshift({ name, rating, body, city });
+      testimonials = testimonials.slice(0, 30);
+      store.set("ts_testimonials", testimonials);
+      toast(t("testi.thanks"));
+      renderTestiForm();
+      renderTestimonials();
+    });
   }
 
   /* ---------------- ADMIN SPACE ---------------- */
