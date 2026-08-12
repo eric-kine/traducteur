@@ -23,6 +23,9 @@ et c'est **gratuit**.
    - `app.py`
    - `requirements.txt`
    - `logo.png` (le logo, pour qu'il s'affiche dans l'appli et sur le reçu)
+   Ajoutez aussi, si possible, le dossier `.streamlit` (qui contient `config.toml`) :
+   il applique la couleur bleue à toute l'interface. L'application fonctionne
+   sans lui, mais certains éléments seront alors rouges au lieu de bleus.
    (vous pouvez aussi ajouter ce guide, ce n'est pas obligatoire).
 5. Cliquez sur le bouton vert **Commit changes** pour valider l'envoi.
 

@@ -1,0 +1,4 @@
+# Thème de l'application : met tous les éléments (cases à cocher, boutons radio,
+# focus des champs, barre de progression) à la couleur de marque bleue.
+[theme]
+primaryColor = "#1565C0"

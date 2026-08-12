@@ -341,6 +341,10 @@ st.markdown(
     <style>
       .stButton>button[kind="primary"] {{ background:{COULEUR_PRINCIPALE}; border:none; }}
       .stButton>button[kind="primary"]:hover {{ background:{COULEUR_FONCE}; }}
+      .stDownloadButton>button {{ background:{COULEUR_PRINCIPALE}; color:#fff; border:none; }}
+      .stDownloadButton>button:hover {{ background:{COULEUR_FONCE}; color:#fff; }}
+      div[data-testid="stFormSubmitButton"]>button {{ background:{COULEUR_PRINCIPALE}; color:#fff; border:none; }}
+      div[data-testid="stFormSubmitButton"]>button:hover {{ background:{COULEUR_FONCE}; color:#fff; }}
       .titre-vert {{ color:{COULEUR_FONCE}; }}
       .carte-info {{ background:#eef4f1; border-left:4px solid {COULEUR_PRINCIPALE};
                      padding:14px 16px; border-radius:12px; }}
@@ -368,7 +372,13 @@ def aller(n):
 with st.sidebar:
     st.header("Espace administration")
     mot_de_passe = st.text_input("Mot de passe admin", type="password")
-    admin_ok = mot_de_passe and mot_de_passe == st.secrets.get("ADMIN_PASSWORD", "admin1234")
+    # st.secrets lève une erreur s'il n'existe aucun fichier secrets.toml :
+    # on retombe alors sur le mot de passe par défaut.
+    try:
+        mdp_attendu = st.secrets.get("ADMIN_PASSWORD", "admin1234")
+    except Exception:
+        mdp_attendu = "admin1234"
+    admin_ok = bool(mot_de_passe) and mot_de_passe == mdp_attendu
     if mot_de_passe and not admin_ok:
         st.error("Mot de passe incorrect.")
     if admin_ok:
