@@ -10,6 +10,7 @@ compte pour le patient, montants en FCFA, reçu téléchargeable.
 """
 
 import io
+import os
 import sqlite3
 import uuid
 from datetime import date, datetime, time, timedelta
@@ -19,10 +20,52 @@ from fpdf import FPDF
 
 BASE = "top_sassur.db"
 
-# ---------------------------------------------------------------------------
-# Données de référence
-# ---------------------------------------------------------------------------
+# ===========================================================================
+# ★  PARAMÈTRES À PERSONNALISER  —  modifiez seulement les valeurs ci-dessous
+# ===========================================================================
 
+# --- Identité de marque ---
+MARQUE_NOM = "Top S'ASSUR"
+COULEUR_PRINCIPALE = "#0F9D58"     # couleur principale, code hexadécimal (ex. "#1565C0" pour du bleu)
+LOGO_FICHIER = "logo.png"          # nom du fichier logo, à placer À CÔTÉ de app.py (ignoré s'il n'existe pas)
+
+# --- Montant du reçu (en FCFA) ---
+MONTANT_DEFAUT = 15000
+
+# --- Établissements partenaires proposés au démarrage ---
+# Format : ("Nom", "Type", "Ville"). Type : "Hôpital", "Clinique" ou "Centre de kinésithérapie".
+ETABLISSEMENTS_DEFAUT = [
+    ("Hôpital Général de Douala", "Hôpital", "Douala"),
+    ("Hôpital Central de Yaoundé", "Hôpital", "Yaoundé"),
+    ("Clinique de la Kiné Bonanjo", "Clinique", "Douala"),
+    ("Centre de Kinésithérapie Bastos", "Centre de kinésithérapie", "Yaoundé"),
+    ("Clinique Régionale de Bafoussam", "Clinique", "Bafoussam"),
+]
+
+# --- Textes de la page d'accueil ---
+ACCUEIL_TITRE = "La kinésithérapie accessible à tous"
+ACCUEIL_TEXTE = (
+    "Top S'ASSUR facilite votre prise en charge en kinésithérapie : "
+    "neurologie, traumatologie, rhumatologie, gynécologie, orthopédie et "
+    "bien-être corporel. Choisissez votre zone de douleur, votre établissement, "
+    "votre rendez-vous — et repartez avec un reçu officiel."
+)
+ACCUEIL_CARTES = [
+    ("🦴 Soulager", "Des soins ciblés selon votre douleur."),
+    ("🏥 Se rapprocher", "Un réseau d'établissements partenaires."),
+    ("🤝 Mission sociale", "Pensé pour tous, secteur informel inclus."),
+]
+
+# ===========================================================================
+#  (Le reste du fichier ne nécessite normalement aucune modification.)
+# ===========================================================================
+
+# Horaires d'ouverture utilisés pour proposer les créneaux
+HEURE_DEBUT = 8      # ouverture 08h
+HEURE_FIN = 17       # fermeture 17h
+PAS_MINUTES = 30
+
+# Zones douloureuses proposées (nom affiché, spécialité kiné associée)
 ZONES = [
     ("Cou", "Neurologie / Traumatologie"),
     ("Épaule", "Orthopédie / Traumatologie"),
@@ -37,18 +80,19 @@ ZONES = [
     ("Pied", "Orthopédie"),
 ]
 
-ETABLISSEMENTS_DEFAUT = [
-    ("Hôpital Général de Douala", "Hôpital", "Douala"),
-    ("Hôpital Central de Yaoundé", "Hôpital", "Yaoundé"),
-    ("Clinique de la Kiné Bonanjo", "Clinique", "Douala"),
-    ("Centre de Kinésithérapie Bastos", "Centre de kinésithérapie", "Yaoundé"),
-    ("Clinique Régionale de Bafoussam", "Clinique", "Bafoussam"),
-]
 
-HEURE_DEBUT = 8      # ouverture 08h
-HEURE_FIN = 17       # fermeture 17h
-PAS_MINUTES = 30
-MONTANT_DEFAUT = 15000  # FCFA
+def _hex_vers_rgb(h):
+    h = h.lstrip("#")
+    return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def _assombrir(rgb, facteur=0.78):
+    return "#%02x%02x%02x" % tuple(int(x * facteur) for x in rgb)
+
+
+COULEUR_RGB = _hex_vers_rgb(COULEUR_PRINCIPALE)
+COULEUR_FONCE = _assombrir(COULEUR_RGB)
+LOGO_PRESENT = bool(LOGO_FICHIER) and os.path.exists(LOGO_FICHIER)
 
 
 # ---------------------------------------------------------------------------
@@ -188,13 +232,19 @@ def construire_recu_pdf(reference, numero, donnees, emis_le_iso):
     pdf = FPDF(format="A4")
     pdf.add_page()
 
-    # Bandeau vert
-    pdf.set_fill_color(15, 157, 88)
+    # Bandeau coloré (couleur de marque)
+    r, g, b = COULEUR_RGB
+    pdf.set_fill_color(r, g, b)
     pdf.rect(0, 0, 210, 34, style="F")
+    if LOGO_PRESENT:
+        try:
+            pdf.image(LOGO_FICHIER, x=172, y=6, h=22)  # logo à droite du bandeau
+        except Exception:
+            pass
     pdf.set_text_color(255, 255, 255)
     pdf.set_font("Helvetica", "B", 22)
     pdf.set_xy(15, 10)
-    pdf.cell(0, 10, "Top S'ASSUR")
+    pdf.cell(0, 10, _latin(MARQUE_NOM))
     pdf.set_font("Helvetica", "", 11)
     pdf.set_xy(15, 21)
     pdf.cell(0, 8, "Recu de prise en charge - Kinesitherapie")
@@ -234,7 +284,7 @@ def construire_recu_pdf(reference, numero, donnees, emis_le_iso):
         y += 11
 
     # Cadre montant
-    pdf.set_draw_color(15, 157, 88)
+    pdf.set_draw_color(r, g, b)
     pdf.set_line_width(0.6)
     pdf.rect(15, y + 2, 180, 10)
 
@@ -271,15 +321,16 @@ def _fr_date(iso):
 # Interface
 # ---------------------------------------------------------------------------
 
-st.set_page_config(page_title="Top S'ASSUR", page_icon="➕", layout="centered")
+st.set_page_config(page_title=MARQUE_NOM, page_icon="➕", layout="centered")
 
 st.markdown(
-    """
+    f"""
     <style>
-      .stButton>button[kind="primary"] { background:#0f9d58; border:none; }
-      .stButton>button[kind="primary"]:hover { background:#0b7a44; }
-      .titre-vert { color:#0b7a44; }
-      .carte-info { background:#dbeee4; padding:14px 16px; border-radius:12px; }
+      .stButton>button[kind="primary"] {{ background:{COULEUR_PRINCIPALE}; border:none; }}
+      .stButton>button[kind="primary"]:hover {{ background:{COULEUR_FONCE}; }}
+      .titre-vert {{ color:{COULEUR_FONCE}; }}
+      .carte-info {{ background:#eef4f1; border-left:4px solid {COULEUR_PRINCIPALE};
+                     padding:14px 16px; border-radius:12px; }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -310,7 +361,9 @@ with st.sidebar:
     if admin_ok:
         st.success("Connecté.")
 
-st.title("➕ Top S'ASSUR")
+if LOGO_PRESENT:
+    st.image(LOGO_FICHIER, width=150)
+st.title(f"➕ {MARQUE_NOM}")
 st.caption("Prise en charge en kinésithérapie — simple, rapide, avec reçu officiel.")
 
 
@@ -371,17 +424,11 @@ if etat.etape > 0:
 
 # --- MODULE 1 : Accueil ---
 if etat.etape == 0:
-    st.markdown("### La kinésithérapie accessible à tous")
-    st.write(
-        "Top S'ASSUR facilite votre prise en charge en kinésithérapie : "
-        "neurologie, traumatologie, rhumatologie, gynécologie, orthopédie et "
-        "bien-être corporel. Choisissez votre zone de douleur, votre établissement, "
-        "votre rendez-vous — et repartez avec un reçu officiel."
-    )
-    c1, c2, c3 = st.columns(3)
-    c1.markdown("**🦴 Soulager**\n\nDes soins ciblés selon votre douleur.")
-    c2.markdown("**🏥 Se rapprocher**\n\nUn réseau d'établissements partenaires.")
-    c3.markdown("**🤝 Mission sociale**\n\nPensé pour tous, secteur informel inclus.")
+    st.markdown(f"### {ACCUEIL_TITRE}")
+    st.write(ACCUEIL_TEXTE)
+    colonnes = st.columns(len(ACCUEIL_CARTES))
+    for col, (titre, texte) in zip(colonnes, ACCUEIL_CARTES):
+        col.markdown(f"**{titre}**\n\n{texte}")
     st.write("")
     if st.button("Commencer →", type="primary"):
         aller(1)
