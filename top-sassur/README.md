@@ -6,24 +6,27 @@ bien-être corporel). Sa mission : **rendre la rééducation accessible aux acte
 informel au Cameroun**, où les frais de kiné sont élevés et où plus de 80 % de la population
 active évolue dans l'informel.
 
-## Lancer l'application
+## Lancer l'application (aucune compétence technique requise)
 
-Aucune installation. Ouvrez simplement le fichier :
+Trois façons, de la plus simple à la plus technique :
 
-```
-top-sassur/index.html
-```
+1. **Le plus simple — un seul fichier.** Double-cliquez sur **`standalone.html`**.
+   Tout (design, code, images) est réuni dans ce fichier unique : il s'ouvre dans
+   n'importe quel navigateur, sur ordinateur comme sur téléphone, sans rien installer.
+   Vous pouvez l'envoyer par e-mail ou WhatsApp, il fonctionnera tel quel.
 
-Pour un rendu identique au web (chemins relatifs), vous pouvez aussi servir le dossier :
+2. **Version « développeur » multi-fichiers.** Ouvrez `index.html` (identique, mais le
+   code est réparti dans `css/` et `js/` pour être plus facile à modifier).
 
-```bash
-cd top-sassur && python3 -m http.server 8000
-# puis http://localhost:8000
-```
+3. **Servir le dossier** (rendu strictement identique au web) :
+   ```bash
+   cd top-sassur && python3 -m http.server 8000   # puis http://localhost:8000
+   ```
 
-C'est un prototype **100 % front-end** (HTML/CSS/JavaScript sans dépendance externe).
+C'est une application **100 % front-end** (HTML/CSS/JavaScript, sans dépendance externe).
 Les données (rendez-vous, partenaires, notifications) sont conservées dans le
-`localStorage` du navigateur pour simuler un back-end.
+`localStorage` du navigateur pour simuler un back-end. Le **reçu est un vrai fichier PDF**
+généré dans le navigateur et téléchargé sur l'appareil (aucun logiciel externe requis).
 
 ## Parcours utilisateur
 
@@ -35,8 +38,8 @@ Les données (rendez-vous, partenaires, notifications) sont conservées dans le
 3. **Établissement** — liste dynamique de cliniques/hôpitaux partenaires, sélection par case.
 4. **Rendez-vous** — calendrier interactif, horloge + créneaux horaires, option *soins à domicile*.
 5. **Paiement** — Orange Money, MTN Mobile Money, MasterCard (formulaires adaptés).
-6. **Validation & reçu PDF** — bouton vert **Enregistrer**, génération d'un reçu officiel
-   (référence unique) téléchargeable en PDF via l'impression du navigateur.
+6. **Validation & reçu PDF** — bouton vert **Enregistrer**, génération d'un **vrai fichier
+   PDF** (référence unique) téléchargé automatiquement, à présenter le jour du rendez-vous.
 
 ## Fonctionnalités additionnelles
 
@@ -54,13 +57,17 @@ Les données (rendez-vous, partenaires, notifications) sont conservées dans le
 
 ```
 top-sassur/
-├── index.html          # structure et vues (accueil, wizard, patient, admin)
+├── standalone.html     # ⭐ application complète en UN seul fichier (à double-cliquer)
+├── index.html          # même app, version multi-fichiers (plus facile à modifier)
 ├── css/styles.css      # design system (charte verte du logo)
-├── js/app.js           # logique, i18n FR/EN, données, persistance localStorage
+├── js/app.js           # logique, i18n FR/EN, données, persistance, génération PDF
 └── assets/
     ├── logo.svg        # logo Top S'ASSUR
     └── rehab.svg       # illustration de rééducation
 ```
+
+> `standalone.html` est **généré** à partir des fichiers ci-dessus (CSS/JS/images
+> intégrés). Si vous modifiez `index.html`, `css/` ou `js/`, régénérez-le.
 
 ## Vers la production
 
