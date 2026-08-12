@@ -15,13 +15,14 @@ et c'est **gratuit**.
 1. Allez sur https://github.com et cliquez sur **Sign up**.
 2. Créez votre compte avec votre adresse email.
 
-### Étape 2 — Déposer les 2 fichiers de l'application
+### Étape 2 — Déposer les fichiers de l'application
 1. Une fois connecté, cliquez sur le bouton **+** en haut à droite, puis **New repository**.
 2. Donnez un nom, par exemple `top-sassur`, puis cliquez sur **Create repository**.
 3. Sur la page qui s'affiche, cliquez sur **uploading an existing file**.
-4. Glissez-déposez les 2 fichiers fournis :
+4. Glissez-déposez les 3 fichiers fournis :
    - `app.py`
    - `requirements.txt`
+   - `logo.png` (le logo, pour qu'il s'affiche dans l'appli et sur le reçu)
    (vous pouvez aussi ajouter ce guide, ce n'est pas obligatoire).
 5. Cliquez sur le bouton vert **Commit changes** pour valider l'envoi.
 
@@ -67,8 +68,12 @@ Dans la barre de gauche (« Espace administration ») :
 
 ## À savoir
 
-- **Le montant du reçu** est fixé à 15 000 FCFA par défaut. Pour le modifier,
-  changez la valeur `MONTANT_DEFAUT` au début du fichier `app.py`.
+- **Le montant du reçu dépend du type d'établissement** (valeurs de départ :
+  Hôpital 20 000 · Clinique 15 000 · Centre de kinésithérapie 10 000 FCFA).
+  Pour les modifier, changez les valeurs de `MONTANT_PAR_TYPE` au début du fichier `app.py`.
+- **Le logo et la couleur** se changent aussi au début de `app.py`
+  (`LOGO_FICHIER`, `COULEUR_PRINCIPALE`). Pour remplacer le logo, déposez votre
+  propre image nommée `logo.png` à côté de `app.py`.
 - **Les établissements par défaut** (Douala, Yaoundé, Bafoussam…) sont des exemples.
   Supprimez-les et ajoutez les vôtres depuis l'espace administration.
 - **Conservation des données** : sur l'hébergement gratuit, les données (rendez-vous,

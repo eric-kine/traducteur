@@ -26,11 +26,20 @@ BASE = "top_sassur.db"
 
 # --- Identité de marque ---
 MARQUE_NOM = "Top S'ASSUR"
-COULEUR_PRINCIPALE = "#0F9D58"     # couleur principale, code hexadécimal (ex. "#1565C0" pour du bleu)
+COULEUR_PRINCIPALE = "#1565C0"     # couleur principale, code hexadécimal (bleu)
 LOGO_FICHIER = "logo.png"          # nom du fichier logo, à placer À CÔTÉ de app.py (ignoré s'il n'existe pas)
 
-# --- Montant du reçu (en FCFA) ---
-MONTANT_DEFAUT = 15000
+# --- Montant du reçu (en FCFA), différent selon le type d'établissement ---
+MONTANT_PAR_TYPE = {
+    "Hôpital": 20000,
+    "Clinique": 15000,
+    "Centre de kinésithérapie": 10000,
+}
+MONTANT_DEFAUT = 15000  # utilisé si le type d'établissement n'est pas dans la liste ci-dessus
+
+
+def montant_pour_type(type_etab):
+    return MONTANT_PAR_TYPE.get(type_etab, MONTANT_DEFAUT)
 
 # --- Établissements partenaires proposés au démarrage ---
 # Format : ("Nom", "Type", "Ville"). Type : "Hôpital", "Clinique" ou "Centre de kinésithérapie".
@@ -269,7 +278,6 @@ def construire_recu_pdf(reference, numero, donnees, emis_le_iso):
         ("Ville", donnees["ville"]),
         ("Date du rendez-vous", _fr_date(donnees["date_rdv"])),
         ("Heure", donnees["heure_rdv"]),
-        ("Montant", f"{donnees['montant']} FCFA"),
     ]
     y = 68
     for label, valeur in lignes:
@@ -283,10 +291,15 @@ def construire_recu_pdf(reference, numero, donnees, emis_le_iso):
         pdf.cell(0, 8, _latin(str(valeur)))
         y += 11
 
-    # Cadre montant
+    # Encadré « montant à régler » mis en évidence
+    pdf.set_fill_color(235, 242, 251)  # bleu très clair
     pdf.set_draw_color(r, g, b)
     pdf.set_line_width(0.6)
-    pdf.rect(15, y + 2, 180, 10)
+    pdf.rect(15, y + 2, 180, 16, style="DF")
+    pdf.set_text_color(r, g, b)
+    pdf.set_font("Helvetica", "B", 13)
+    pdf.set_xy(20, y + 6)
+    pdf.cell(0, 8, _latin(f"Montant a regler : {donnees['montant']} FCFA"))
 
     # Mentions
     pdf.set_font("Helvetica", "I", 8)
@@ -460,7 +473,10 @@ elif etat.etape == 1:
 elif etat.etape == 2:
     st.subheader("Choisissez un établissement")
     etabs = lister_etablissements()
-    noms = [f"{e['nom']} — {e['type']} · {e['ville']}" for e in etabs]
+    noms = [
+        f"{e['nom']} — {e['type']} · {e['ville']} · {montant_pour_type(e['type'])} FCFA"
+        for e in etabs
+    ]
     if noms:
         defaut = choix.get("_index_etab", 0)
         idx = st.radio("Établissements partenaires", range(len(noms)),
@@ -468,6 +484,8 @@ elif etat.etape == 2:
         choix["_index_etab"] = idx
         choix["etablissement"] = etabs[idx]["nom"]
         choix["ville"] = etabs[idx]["ville"]
+        choix["type_etab"] = etabs[idx]["type"]
+        choix["montant"] = montant_pour_type(etabs[idx]["type"])
     else:
         st.warning("Aucun établissement disponible. Contactez l'administration.")
     col1, col2 = st.columns(2)
@@ -532,6 +550,7 @@ elif etat.etape == 4:
             st.write(f"- Zone : **{choix.get('zone')}**")
             st.write(f"- Établissement : **{choix.get('etablissement')}** ({choix.get('ville')})")
             st.write(f"- Date : **{_fr_date(choix.get('date_rdv',''))}** à **{choix.get('heure_rdv')}**")
+            st.write(f"- Montant : **{choix.get('montant', MONTANT_DEFAUT)} FCFA**")
             envoye = st.form_submit_button("✓ Enregistrer", type="primary")
 
         if envoye:
@@ -546,7 +565,8 @@ elif etat.etape == 4:
                             "nom": nom, "prenom": prenom, "tel": tel,
                             "zone": choix["zone"], "etablissement": choix["etablissement"],
                             "ville": choix["ville"], "date_rdv": choix["date_rdv"],
-                            "heure_rdv": choix["heure_rdv"], "montant": MONTANT_DEFAUT,
+                            "heure_rdv": choix["heure_rdv"],
+                            "montant": choix.get("montant", MONTANT_DEFAUT),
                         }
                     )
                     choix["_reference"], choix["_numero"], choix["_pdf"] = ref, numero, pdf_bytes
