@@ -13,3 +13,7 @@ Thumbs.db
 
 # Documents de test éventuels
 *.tmp
+
+# Base de données locale et secrets du serveur
+*.db
+.env

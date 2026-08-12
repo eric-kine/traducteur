@@ -1,0 +1,32 @@
+# Blueprint Render pour Top S'ASSUR (version production, dossier top-sassur/server).
+# Déploiement : sur https://render.com, "New +" → "Blueprint" → connectez ce dépôt.
+# Render lit ce fichier et crée le service automatiquement.
+services:
+  - type: web
+    name: top-sassur
+    runtime: python
+    plan: free
+    rootDir: top-sassur/server
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn -w 3 -b 0.0.0.0:$PORT server:app"
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.6"
+      - key: SECRET_KEY
+        generateValue: true          # Render génère une clé secrète forte
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false                  # à saisir dans le tableau de bord Render
+      - key: PAYMENT_PROVIDER
+        value: sandbox
+      # Paiements réels Orange Money / MTN MoMo (à renseigner dans Render) :
+      # - key: PAYMENT_PROVIDER
+      #   value: campay
+      # - key: CAMPAY_USERNAME
+      #   sync: false
+      # - key: CAMPAY_PASSWORD
+      #   sync: false
+      # - key: CAMPAY_BASE_URL
+      #   value: https://api.campay.net

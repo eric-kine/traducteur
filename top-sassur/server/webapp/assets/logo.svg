@@ -1,0 +1,22 @@
+<svg viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Top S'ASSUR">
+  <defs>
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8ed14f"/>
+      <stop offset="1" stop-color="#1f7a34"/>
+    </linearGradient>
+    <linearGradient id="arrow" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#5fb43a"/>
+      <stop offset="1" stop-color="#a4e05a"/>
+    </linearGradient>
+  </defs>
+  <!-- Shield / leaf ring -->
+  <path d="M160 40 C120 40 84 58 84 58 C84 130 96 190 160 232 C224 190 236 130 236 58 C236 58 200 40 160 40 Z"
+        fill="none" stroke="url(#leaf)" stroke-width="16" stroke-linejoin="round"/>
+  <!-- Upward arrow sweeping out of the shield -->
+  <path d="M96 196 C150 150 208 120 250 78" fill="none" stroke="url(#arrow)" stroke-width="18" stroke-linecap="round"/>
+  <path d="M250 78 l-8 34 l34 -10 Z" fill="#a4e05a"/>
+  <!-- Person reaching up -->
+  <circle cx="160" cy="96" r="17" fill="url(#leaf)"/>
+  <path d="M160 118 C160 150 160 170 160 188 M160 132 C138 118 122 112 112 104 M160 132 C182 118 198 112 208 104"
+        fill="none" stroke="url(#leaf)" stroke-width="15" stroke-linecap="round"/>
+</svg>

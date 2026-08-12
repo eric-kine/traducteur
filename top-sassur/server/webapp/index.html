@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1f7a34" />
+  <title>Top S'ASSUR — Assurance Santé Kiné</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="#" data-nav="home">
+      <img src="assets/logo.svg" alt="" class="brand__logo" />
+      <span class="brand__text"><strong>TOP S'ASSUR</strong><em data-i18n="brand.tagline">Assurance Santé</em></span>
+    </a>
+    <nav class="main-nav" aria-label="Navigation principale">
+      <button class="nav-link is-active" data-nav="home" data-i18n="nav.home">Accueil</button>
+      <button class="nav-link" data-nav="booking" data-i18n="nav.booking">Prendre RDV</button>
+      <button class="nav-link" data-nav="patient" data-i18n="nav.patient">Espace patient</button>
+      <button class="nav-link" data-nav="admin" data-i18n="nav.admin">Admin</button>
+    </nav>
+    <div class="header-tools">
+      <button class="bell" id="bellBtn" aria-label="Notifications">🔔<span class="bell__count" id="bellCount" hidden>0</span></button>
+      <div class="lang-switch" role="group" aria-label="Langue">
+        <button class="lang is-active" data-lang="fr">FR</button>
+        <button class="lang" data-lang="en">EN</button>
+      </div>
+      <div class="account" id="account"></div>
+      <button class="burger" id="burger" aria-label="Menu">☰</button>
+    </div>
+  </header>
+
+  <div class="notif-panel" id="notifPanel" hidden>
+    <h4 data-i18n="notif.title">Notifications</h4>
+    <ul id="notifList"></ul>
+  </div>
+
+  <main id="app">
+    <!-- HOME -->
+    <section class="view" data-view="home">
+      <div class="hero">
+        <div class="hero__text">
+          <span class="pill" data-i18n="home.pill">Assurance santé • Kinésithérapie</span>
+          <h1 data-i18n="home.title">Vos soins de kiné, enfin accessibles.</h1>
+          <p class="lead" data-i18n="home.lead">Top S'ASSUR rend la rééducation abordable pour les acteurs du secteur informel au Cameroun.</p>
+          <div class="hero__cta">
+            <button class="btn btn--primary btn--lg" data-nav="booking" data-i18n="home.cta">Démarrer ma prise en charge</button>
+            <button class="btn btn--ghost btn--lg" data-scroll="mission" data-i18n="home.learn">Notre mission</button>
+          </div>
+          <div class="hero__stats">
+            <div><strong>80%</strong><span data-i18n="home.stat1">de la population active dans l'informel</span></div>
+            <div><strong>6</strong><span data-i18n="home.stat2">domaines de kinésithérapie couverts</span></div>
+            <div><strong>PDF</strong><span data-i18n="home.stat3">reçu officiel à chaque RDV</span></div>
+          </div>
+        </div>
+        <div class="hero__art" aria-hidden="true"></div>
+      </div>
+      <div class="section" id="mission">
+        <h2 data-i18n="mission.title">Pourquoi Top S'ASSUR&nbsp;?</h2>
+        <p class="section__lead" data-i18n="mission.lead">Au Cameroun, les frais de kinésithérapie sont élevés et hors de portée de la majorité.</p>
+        <div class="cards" id="benefits"></div>
+      </div>
+      <div class="section section--alt">
+        <h2 data-i18n="domains.title">Domaines pris en charge</h2>
+        <div class="chips-grid" id="domainsGrid"></div>
+      </div>
+      <div class="section cta-band">
+        <h2 data-i18n="home.ctaband">Prêt à prendre soin de vous&nbsp;?</h2>
+        <button class="btn btn--primary btn--lg" data-nav="booking" data-i18n="home.cta">Démarrer ma prise en charge</button>
+      </div>
+    </section>
+
+    <!-- BOOKING -->
+    <section class="view" data-view="booking" hidden>
+      <div class="wizard">
+        <ol class="steps" id="stepsBar"></ol>
+        <div class="step" data-step="1">
+          <h2 data-i18n="step1.title">1. Où avez-vous mal&nbsp;?</h2>
+          <p class="hint" data-i18n="step1.hint">Sélectionnez une ou plusieurs zones.</p>
+          <div class="zones">
+            <div class="bodymap" id="bodymap"></div>
+            <div class="zones__list">
+              <div class="zone-chips" id="zoneChips"></div>
+              <label class="wellness"><input type="checkbox" id="wellness" /><span data-i18n="step1.wellness">Pas de douleur — soins de bien-être corporel</span></label>
+            </div>
+          </div>
+        </div>
+        <div class="step" data-step="2" hidden>
+          <h2 data-i18n="step2.title">2. Choisissez votre établissement</h2>
+          <p class="hint" data-i18n="step2.hint">Cliniques et hôpitaux partenaires près de chez vous.</p>
+          <div class="facilities" id="facilities"></div>
+        </div>
+        <div class="step" data-step="3" hidden>
+          <h2 data-i18n="step3.title">3. Planifiez votre rendez-vous</h2>
+          <div class="schedule">
+            <div class="calendar" id="calendar"></div>
+            <div class="timebox">
+              <h3 data-i18n="step3.time">Heure du rendez-vous</h3>
+              <div class="clock" id="clock"></div>
+              <div class="timeslots" id="timeslots"></div>
+              <label class="homecare"><input type="checkbox" id="homecare" /><span data-i18n="step3.home">Soins à domicile (+ 3 000 FCFA)</span></label>
+            </div>
+          </div>
+        </div>
+        <div class="step" data-step="4" hidden>
+          <h2 data-i18n="step4.title">4. Paiement sécurisé</h2>
+          <div class="pay">
+            <div class="pay__methods" id="payMethods"></div>
+            <div class="pay__form" id="payForm"></div>
+          </div>
+          <div class="pay-status" id="payStatus"></div>
+        </div>
+        <div class="step" data-step="5" hidden>
+          <h2 data-i18n="step5.title">5. Validation</h2>
+          <div class="summary" id="summary"></div>
+          <button class="btn btn--save btn--lg" id="saveBtn" data-i18n="step5.save">Enregistrer</button>
+        </div>
+        <div class="wizard__nav">
+          <button class="btn btn--ghost" id="prevBtn" data-i18n="wiz.prev">Précédent</button>
+          <div class="wizard__cost" id="costTag"></div>
+          <button class="btn btn--primary" id="nextBtn" data-i18n="wiz.next">Suivant</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PATIENT -->
+    <section class="view" data-view="patient" hidden>
+      <h2 data-i18n="patient.title">Espace patient</h2>
+      <div id="patientGate"></div>
+      <div class="patient-grid" id="patientContent" hidden>
+        <div class="panel"><h3 data-i18n="patient.history">Historique des rendez-vous</h3><div id="patientHistory"></div></div>
+        <div class="panel"><h3 data-i18n="patient.tracking">Suivi des zones douloureuses</h3><div id="painTracking"></div></div>
+      </div>
+    </section>
+
+    <!-- ADMIN -->
+    <section class="view" data-view="admin" hidden>
+      <h2 data-i18n="admin.title">Espace administrateur</h2>
+      <div id="adminGate"></div>
+      <div id="adminContent" hidden>
+        <div class="admin-stats" id="adminStats"></div>
+        <div class="admin-grid">
+          <div class="panel">
+            <h3 data-i18n="admin.partners">Gestion des partenaires</h3>
+            <form class="add-partner" id="addPartner">
+              <input type="text" id="pName" data-i18n-ph="admin.name" placeholder="Nom de l'établissement" required />
+              <input type="text" id="pCity" data-i18n-ph="admin.city" placeholder="Ville" required />
+              <input type="number" id="pPrice" data-i18n-ph="admin.price" placeholder="Tarif séance (FCFA)" min="0" required />
+              <button class="btn btn--primary" type="submit" data-i18n="admin.add">Ajouter</button>
+            </form>
+            <div id="partnerList"></div>
+          </div>
+          <div class="panel"><h3 data-i18n="admin.payments">Suivi des paiements</h3><div id="paymentList"></div></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <div><img src="assets/logo.svg" alt="" class="foot__logo" /><span>© <span id="year"></span> Top S'ASSUR — <span data-i18n="foot.rights">Assurance santé kinésithérapie</span></span></div>
+    <p class="foot__sec" data-i18n="foot.security">🔒 Données patients chiffrées — conformité aux standards de protection des données médicales.</p>
+  </footer>
+
+  <div class="receipt-overlay" id="receiptOverlay" hidden>
+    <div class="receipt" id="receipt"></div>
+    <div class="receipt-actions">
+      <button class="btn btn--save" id="downloadPdf" data-i18n="receipt.download">Télécharger le reçu PDF</button>
+      <button class="btn btn--ghost" id="closeReceipt" data-i18n="receipt.close">Fermer</button>
+    </div>
+  </div>
+
+  <!-- Auth modal -->
+  <div class="modal-overlay" id="authModal" hidden>
+    <div class="modal">
+      <button class="modal__close" id="authClose">×</button>
+      <h3 id="authTitle">Connexion</h3>
+      <p class="sub" id="authSub"></p>
+      <div class="err" id="authErr"></div>
+      <form id="authForm">
+        <div class="field" id="fldName" hidden><label data-i18n="auth.name">Nom complet</label><input type="text" id="auName" autocomplete="name" /></div>
+        <div class="field"><label data-i18n="auth.phone">Téléphone</label><input type="tel" id="auPhone" autocomplete="tel" placeholder="+237 6XX XXX XXX" /></div>
+        <div class="field"><label data-i18n="auth.password">Mot de passe</label><input type="password" id="auPass" autocomplete="current-password" /></div>
+        <div class="modal__actions"><button class="btn btn--primary" type="submit" id="authSubmit">Se connecter</button></div>
+      </form>
+      <div class="modal__switch" id="authSwitch"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+  <script src="js/app.js"></script>
+</body>
+</html>
