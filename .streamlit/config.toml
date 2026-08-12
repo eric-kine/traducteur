@@ -1,0 +1,4 @@
+# Thème appliqué lors du déploiement sur Streamlit Community Cloud
+# (Streamlit lit ce fichier à la racine du dépôt). Couleur de marque Top S'ASSUR.
+[theme]
+primaryColor = "#1565C0"
