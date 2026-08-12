@@ -65,6 +65,11 @@
         <h2 data-i18n="domains.title">Domaines pris en charge</h2>
         <div class="chips-grid" id="domainsGrid"></div>
       </div>
+      <div class="section" id="testimonials">
+        <h2 data-i18n="testi.title">Ils nous font confiance</h2>
+        <p class="section__lead" data-i18n="testi.lead">Des patients du secteur informel racontent leur expérience.</p>
+        <div class="testi-grid" id="testiGrid"></div>
+      </div>
       <div class="section cta-band">
         <h2 data-i18n="home.ctaband">Prêt à prendre soin de vous&nbsp;?</h2>
         <button class="btn btn--primary btn--lg" data-nav="booking" data-i18n="home.cta">Démarrer ma prise en charge</button>
@@ -129,8 +134,17 @@
       <h2 data-i18n="patient.title">Espace patient</h2>
       <div id="patientGate"></div>
       <div class="patient-grid" id="patientContent" hidden>
-        <div class="panel"><h3 data-i18n="patient.history">Historique des rendez-vous</h3><div id="patientHistory"></div></div>
+        <div class="panel panel--rewards">
+          <h3 data-i18n="rewards.title">Mes récompenses</h3>
+          <div id="rewardsBox"></div>
+        </div>
         <div class="panel"><h3 data-i18n="patient.tracking">Suivi des zones douloureuses</h3><div id="painTracking"></div></div>
+        <div class="panel"><h3 data-i18n="patient.history">Historique des rendez-vous</h3><div id="patientHistory"></div></div>
+        <div class="panel panel--testi">
+          <h3 data-i18n="testi.share">Partager mon expérience</h3>
+          <p class="hint" data-i18n="testi.shareHint">Votre témoignage encourage d'autres patients à se soigner.</p>
+          <div id="testiFormBox"></div>
+        </div>
       </div>
     </section>
 

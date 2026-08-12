@@ -71,6 +71,16 @@
       "admin.gate": "Espace réservé à l'administrateur.", "admin.logout": "Déconnexion admin",
       "pay.processing": "Traitement du paiement…", "pay.pending": "Confirmez le paiement sur votre téléphone (code PIN Mobile Money)…",
       "pay.success": "Paiement confirmé ✓", "pay.failed": "Paiement échoué. Veuillez réessayer.",
+      "testi.title": "Ils nous font confiance", "testi.lead": "Des patients du secteur informel racontent leur expérience.",
+      "testi.empty": "Soyez le premier à partager votre expérience.",
+      "testi.share": "Partager mon expérience", "testi.shareHint": "Votre témoignage encourage d'autres patients à se soigner.",
+      "testi.rating": "Votre note", "testi.city": "Ville (facultatif)",
+      "testi.placeholder": "Racontez votre expérience avec Top S'ASSUR…",
+      "testi.submit": "Publier mon témoignage", "testi.thanks": "Merci pour votre témoignage ✓",
+      "testi.needText": "Écrivez au moins 10 caractères.", "testi.share2": "Partager", "testi.copied": "Témoignage copié ✓",
+      "rewards.title": "Mes récompenses", "rewards.points": "points", "rewards.level": "Niveau",
+      "rewards.sessions": "séances suivies", "rewards.next": "Prochain palier",
+      "rewards.badges": "Mes badges", "rewards.empty": "Réservez et suivez vos séances pour débloquer des badges.",
       "err.generic": "Une erreur est survenue.", "hello": "Bonjour"
     },
     en: {
@@ -132,6 +142,16 @@
       "admin.gate": "Administrator area only.", "admin.logout": "Admin sign out",
       "pay.processing": "Processing payment…", "pay.pending": "Confirm the payment on your phone (Mobile Money PIN)…",
       "pay.success": "Payment confirmed ✓", "pay.failed": "Payment failed. Please try again.",
+      "testi.title": "They trust us", "testi.lead": "Informal-sector patients share their experience.",
+      "testi.empty": "Be the first to share your experience.",
+      "testi.share": "Share my experience", "testi.shareHint": "Your story encourages other patients to seek care.",
+      "testi.rating": "Your rating", "testi.city": "City (optional)",
+      "testi.placeholder": "Tell us about your experience with Top S'ASSUR…",
+      "testi.submit": "Publish my testimonial", "testi.thanks": "Thank you for your testimonial ✓",
+      "testi.needText": "Write at least 10 characters.", "testi.share2": "Share", "testi.copied": "Testimonial copied ✓",
+      "rewards.title": "My rewards", "rewards.points": "points", "rewards.level": "Level",
+      "rewards.sessions": "sessions completed", "rewards.next": "Next tier",
+      "rewards.badges": "My badges", "rewards.empty": "Book and complete sessions to unlock badges.",
       "err.generic": "Something went wrong.", "hello": "Hello"
     }
   };
@@ -283,11 +303,30 @@
   }
 
   /* ---------------- HOME ---------------- */
+  const stars = (n) => "★★★★★☆☆☆☆☆".slice(5 - n, 10 - n);
+  const escapeHtml = (s) => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
   function renderHome() {
     const wrap = $("#benefits"); wrap.innerHTML = "";
     BENEFITS.forEach(b => { const [ti, de] = b[lang]; wrap.appendChild(el("div", "card", `<span class="ic">${b.ic}</span><h3>${ti}</h3><p>${de}</p>`)); });
     const grid = $("#domainsGrid"); grid.innerHTML = "";
     BENEFITS.forEach(b => grid.appendChild(el("div", "domain", `<span class="ic">${b.ic}</span><strong>${b[lang][0]}</strong>`)));
+    renderTestimonials();
+  }
+  async function renderTestimonials() {
+    const grid = $("#testiGrid"); if (!grid) return;
+    let list = [];
+    try { list = await api("/testimonials"); } catch { list = []; }
+    if (!list.length) { grid.innerHTML = `<p class="empty">${t("testi.empty")}</p>`; return; }
+    grid.innerHTML = "";
+    list.slice(0, 6).forEach(x => {
+      const initial = (x.name || "?").trim().charAt(0).toUpperCase();
+      grid.appendChild(el("figure", "testi",
+        `<div class="testi__stars" aria-label="${x.rating}/5">${stars(x.rating)}</div>
+         <blockquote>“${escapeHtml(x.body)}”</blockquote>
+         <figcaption><span class="testi__ava">${initial}</span>
+           <span><strong>${escapeHtml(x.name)}</strong>${x.city ? `<em>📍 ${escapeHtml(x.city)}</em>` : ""}</span></figcaption>`));
+    });
   }
 
   /* ---------------- WIZARD ---------------- */
@@ -583,6 +622,64 @@
       track.innerHTML = entries.map(([z, c]) =>
         `<div class="bar-label"><span>${zoneName(z)}</span><span>${c}×</span></div><div class="bar"><span style="width:${Math.round(c / max * 100)}%"></span></div>`).join("");
     }
+    renderRewards();
+    renderTestiForm();
+  }
+
+  /* ---------------- REWARDS (gamification) ---------------- */
+  async function renderRewards() {
+    const box = $("#rewardsBox"); if (!box) return;
+    let r;
+    try { r = await api("/patient/rewards?lang=" + lang, { auth: true }); }
+    catch { box.innerHTML = `<p class="empty">${t("rewards.empty")}</p>`; return; }
+    const earned = r.badges.filter(b => b.earned);
+    const next = r.badges.find(b => !b.earned);
+    const pct = Math.round((r.levelProgress / r.levelSpan) * 100);
+    box.innerHTML = `
+      <div class="reward-head">
+        <div class="reward-points"><strong>${r.points}</strong><span>${t("rewards.points")}</span></div>
+        <div class="reward-level">
+          <div class="reward-level__top"><span>${t("rewards.level")} ${r.level}</span><span>${r.sessions} ${t("rewards.sessions")}</span></div>
+          <div class="reward-bar"><span style="width:${pct}%"></span></div>
+        </div>
+      </div>
+      ${next ? `<div class="reward-next">${t("rewards.next")} : <strong>${next.icon} ${escapeHtml(next.title)}</strong> — ${next.progress}/${next.threshold}</div>` : ""}
+      <h4 class="reward-badges-h">${t("rewards.badges")} · ${earned.length}/${r.badges.length}</h4>
+      <div class="badges">
+        ${r.badges.map(b => `
+          <div class="badge-card ${b.earned ? "on" : "off"}" title="${escapeHtml(b.desc)}">
+            <span class="badge-ic">${b.icon}</span>
+            <strong>${escapeHtml(b.title)}</strong>
+            <small>${escapeHtml(b.desc)}</small>
+            ${b.earned ? `<span class="badge-tick">✓</span>` : `<span class="badge-prog">${b.progress}/${b.threshold}</span>`}
+          </div>`).join("")}
+      </div>`;
+  }
+
+  /* ---------------- TESTIMONIAL FORM ---------------- */
+  function renderTestiForm() {
+    const box = $("#testiFormBox"); if (!box) return;
+    let rating = 5;
+    box.innerHTML = `
+      <div class="field">
+        <label>${t("testi.rating")}</label>
+        <div class="star-pick" id="starPick">${[1, 2, 3, 4, 5].map(i => `<button type="button" class="star ${i <= rating ? "on" : ""}" data-v="${i}">★</button>`).join("")}</div>
+      </div>
+      <div class="field"><label>${t("testi.city")}</label><input id="tCity" placeholder="${lang === "fr" ? "Douala, Yaoundé…" : "Douala, Yaoundé…"}"></div>
+      <div class="field"><textarea id="tBody" rows="3" placeholder="${t("testi.placeholder")}"></textarea></div>
+      <button class="btn btn--primary" id="tSubmit">${t("testi.submit")}</button>`;
+    const paint = () => box.querySelectorAll(".star").forEach(s => s.classList.toggle("on", Number(s.dataset.v) <= rating));
+    box.querySelectorAll(".star").forEach(s => s.addEventListener("click", () => { rating = Number(s.dataset.v); paint(); }));
+    $("#tSubmit").addEventListener("click", async () => {
+      const body = $("#tBody").value.trim();
+      if (body.length < 10) { toast(t("testi.needText")); return; }
+      try {
+        await api("/testimonials", { method: "POST", auth: true, body: { rating, body, city: $("#tCity").value.trim() } });
+        toast(t("testi.thanks"));
+        renderTestiForm();
+        renderTestimonials();
+      } catch (ex) { toast(ex.message); }
+    });
   }
 
   /* ---------------- ADMIN ---------------- */

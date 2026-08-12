@@ -111,6 +111,12 @@ def init_db() -> None:
             patient_id INTEGER NOT NULL REFERENCES patients(id),
             title TEXT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS testimonials (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            patient_id INTEGER NOT NULL REFERENCES patients(id),
+            name TEXT NOT NULL, rating INTEGER NOT NULL, body TEXT NOT NULL,
+            city TEXT, approved INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL
+        );
         """
     )
     # seed facilities
@@ -119,6 +125,27 @@ def init_db() -> None:
         con.executemany(
             "INSERT INTO facilities (name, city, price, active, created_at) VALUES (?,?,?,1,?)",
             [(n, c, p, now) for (n, c, p) in DEFAULT_FACILITIES],
+        )
+    # seed d'exemples de témoignages (patient_id=0 : entrées de démonstration)
+    if con.execute("SELECT COUNT(*) FROM testimonials").fetchone()[0] == 0:
+        now = dt.datetime.utcnow().isoformat()
+        con.executemany(
+            """INSERT INTO testimonials (patient_id, name, rating, body, city, approved, created_at)
+               VALUES (0,?,?,?,?,1,?)""",
+            [
+                ("Marlyse T.", 5,
+                 "Après mon accouchement, la rééducation périnéale était trop chère. "
+                 "Avec Top S'ASSUR j'ai payé en Mobile Money et pris rendez-vous en 2 minutes.",
+                 "Douala", now),
+                ("Boris N.", 5,
+                 "Chauffeur de taxi, j'ai des douleurs de dos chroniques. Les séances à domicile "
+                 "m'ont évité de fermer boutique une journée. Merci !",
+                 "Yaoundé", now),
+                ("Aïcha M.", 4,
+                 "Simple à utiliser et le reçu PDF est accepté directement à la clinique. "
+                 "Enfin une solution pensée pour nous.",
+                 "Bafoussam", now),
+            ],
         )
     con.commit()
     con.close()
@@ -457,6 +484,118 @@ def list_notifications():
         (g.patient_id,),
     ).fetchall()
     return jsonify([{"title": r["title"], "body": r["body"], "at": r["created_at"]} for r in rows])
+
+
+# --------------------------------------------------------------------------- #
+# Routes — témoignages (intégration sociale)
+# --------------------------------------------------------------------------- #
+@app.get("/api/testimonials")
+def list_testimonials():
+    rows = get_db().execute(
+        """SELECT name, rating, body, city, created_at FROM testimonials
+           WHERE approved=1 ORDER BY id DESC LIMIT 30"""
+    ).fetchall()
+    return jsonify([
+        {"name": r["name"], "rating": r["rating"], "body": r["body"],
+         "city": r["city"], "at": r["created_at"]}
+        for r in rows
+    ])
+
+
+@app.post("/api/testimonials")
+@require_patient
+def add_testimonial():
+    d = request.get_json(silent=True) or {}
+    body = (d.get("body") or "").strip()
+    try:
+        rating = max(1, min(5, int(d.get("rating"))))
+    except (TypeError, ValueError):
+        rating = 5
+    if len(body) < 10:
+        return jsonify(error="Votre témoignage doit contenir au moins 10 caractères."), 400
+    db = get_db()
+    pat = db.execute("SELECT name FROM patients WHERE id=?", (g.patient_id,)).fetchone()
+    name = pat["name"] if pat else "Patient"
+    city = (d.get("city") or "").strip() or None
+    cur = db.execute(
+        """INSERT INTO testimonials (patient_id, name, rating, body, city, approved, created_at)
+           VALUES (?,?,?,?,?,1,?)""",
+        (g.patient_id, name, rating, body, city, dt.datetime.utcnow().isoformat()),
+    )
+    db.commit()
+    return jsonify(id=cur.lastrowid, name=name, rating=rating, body=body, city=city)
+
+
+# --------------------------------------------------------------------------- #
+# Routes — fidélité / gamification
+# --------------------------------------------------------------------------- #
+BADGES = [
+    # id, seuil (nb de séances payées), icône, (fr_titre, fr_desc), (en_titre, en_desc)
+    ("first", 1, "🌱", ("Premier pas", "Votre toute première séance de soins."),
+     ("First step", "Your very first care session.")),
+    ("ontrack", 3, "🚶", ("Sur la bonne voie", "3 séances suivies — la régularité paie."),
+     ("On track", "3 sessions done — consistency pays off.")),
+    ("dedicated", 5, "🔥", ("Assidu·e", "5 séances : vous prenez soin de vous."),
+     ("Dedicated", "5 sessions: you take care of yourself.")),
+    ("champion", 10, "🏆", ("Champion·ne du soin", "10 séances — un vrai parcours de rééducation."),
+     ("Care champion", "10 sessions — a true rehab journey.")),
+]
+
+
+@app.get("/api/patient/rewards")
+@require_patient
+def patient_rewards():
+    lang = request.args.get("lang", "fr")
+    en = lang == "en"
+    db = get_db()
+    rows = db.execute(
+        "SELECT homecare, zones, wellness FROM appointments WHERE patient_id=? AND status='paid'",
+        (g.patient_id,),
+    ).fetchall()
+    paid = len(rows)
+    homecare_used = any(r["homecare"] for r in rows)
+    distinct_zones = set()
+    wellness_used = False
+    for r in rows:
+        for z in json.loads(r["zones"]):
+            distinct_zones.add(z)
+        if r["wellness"]:
+            wellness_used = True
+    points = paid * 50 + (30 if homecare_used else 0)
+    badges = []
+    for bid, thresh, ic, fr, en_ in BADGES:
+        ti, de = (en_ if en else fr)
+        badges.append({
+            "id": bid, "icon": ic, "title": ti, "desc": de,
+            "earned": paid >= thresh, "threshold": thresh, "progress": min(paid, thresh),
+        })
+    # badges thématiques
+    badges.append({
+        "id": "home", "icon": "🏠",
+        "title": "Chez soi" if not en else "Home care",
+        "desc": ("Une séance à domicile réalisée." if not en else "A home-care session completed."),
+        "earned": homecare_used, "threshold": 1, "progress": 1 if homecare_used else 0,
+    })
+    badges.append({
+        "id": "explorer", "icon": "🧭",
+        "title": "Explorateur du corps" if not en else "Body explorer",
+        "desc": ("Soins sur 3 zones différentes." if not en else "Care on 3 different areas."),
+        "earned": len(distinct_zones) >= 3, "threshold": 3, "progress": min(len(distinct_zones), 3),
+    })
+    badges.append({
+        "id": "wellness", "icon": "🌿",
+        "title": "Bien-être" if not en else "Wellness",
+        "desc": ("Une séance de bien-être corporel." if not en else "A body-wellness session."),
+        "earned": wellness_used, "threshold": 1, "progress": 1 if wellness_used else 0,
+    })
+    # niveau simple à partir des points
+    level = 1 + points // 200
+    level_floor = (level - 1) * 200
+    return jsonify(
+        points=points, level=level, sessions=paid,
+        levelProgress=points - level_floor, levelSpan=200,
+        badges=badges,
+    )
 
 
 # --------------------------------------------------------------------------- #
