@@ -270,3 +270,45 @@ main{max-width:1080px;margin:0 auto;padding:0 1.2rem 3rem}
   .receipt{box-shadow:none;width:100%}
   .receipt-actions{display:none}
 }
+
+/* ============ témoignages (intégration sociale) ============ */
+.testi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.1rem;max-width:960px;margin:0 auto}
+.testi{margin:0;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:1.3rem;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:.7rem}
+.testi__stars{color:#f5a623;letter-spacing:2px;font-size:1rem}
+.testi blockquote{margin:0;color:var(--ink);font-size:.95rem;line-height:1.5}
+.testi figcaption{display:flex;align-items:center;gap:.6rem;margin-top:auto}
+.testi__ava{width:38px;height:38px;border-radius:50%;background:var(--gr);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex:none}
+.testi figcaption strong{display:block;color:var(--green-900);font-size:.9rem}
+.testi figcaption em{font-style:normal;color:var(--muted);font-size:.78rem}
+
+/* ============ gamification (récompenses) ============ */
+.patient-grid{grid-template-columns:1fr 1fr}
+.panel--rewards{grid-column:1/-1}
+.reward-head{display:flex;gap:1.2rem;align-items:center;flex-wrap:wrap}
+.reward-points{background:var(--gr);color:#fff;border-radius:16px;padding:.9rem 1.2rem;text-align:center;min-width:110px}
+.reward-points strong{display:block;font-size:1.8rem;line-height:1}
+.reward-points span{font-size:.78rem;opacity:.9}
+.reward-level{flex:1;min-width:200px}
+.reward-level__top{display:flex;justify-content:space-between;font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:.35rem}
+.reward-bar{height:14px;border-radius:8px;background:var(--green-50);overflow:hidden}
+.reward-bar>span{display:block;height:100%;background:var(--gr);border-radius:8px;transition:width .4s}
+.reward-next{margin:.9rem 0 .3rem;font-size:.88rem;color:var(--muted)}
+.reward-next strong{color:var(--green-800)}
+.reward-badges-h{margin:1rem 0 .6rem;color:var(--green-900);font-size:.95rem}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.7rem}
+.badge-card{position:relative;border:1.5px solid var(--line);border-radius:14px;padding:.9rem .7rem;text-align:center;background:#fff;transition:.15s}
+.badge-card.on{border-color:var(--green-400);background:var(--green-50)}
+.badge-card.off{opacity:.55;filter:grayscale(.6)}
+.badge-card .badge-ic{font-size:1.7rem;display:block;margin-bottom:.3rem}
+.badge-card strong{display:block;color:var(--green-900);font-size:.82rem}
+.badge-card small{display:block;color:var(--muted);font-size:.68rem;margin-top:.2rem;line-height:1.3}
+.badge-tick{position:absolute;top:6px;right:8px;color:var(--green-700);font-weight:800}
+.badge-prog{position:absolute;top:6px;right:8px;color:var(--muted);font-size:.7rem;font-weight:700}
+
+/* ============ formulaire témoignage ============ */
+.panel--testi{grid-column:1/-1}
+.panel--testi textarea{width:100%;padding:.7rem .9rem;border:1.5px solid var(--line);border-radius:10px;font-size:.95rem;font-family:inherit;resize:vertical;background:#fff}
+.panel--testi textarea:focus{outline:none;border-color:var(--green-500)}
+.star-pick{display:flex;gap:.2rem}
+.star-pick .star{border:0;background:transparent;font-size:1.6rem;color:#d6ddd6;line-height:1;padding:0 .05rem}
+.star-pick .star.on{color:#f5a623}

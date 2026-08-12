@@ -48,6 +48,10 @@ généré dans le navigateur et téléchargé sur l'appareil (aucun logiciel ext
 - **Espace administrateur** — statistiques d'utilisation (RDV, recettes, partenaires,
   soins à domicile), ajout/suppression de partenaires, suivi des paiements.
 - **Notifications** — rappels de rendez-vous et suivi des soins (simulés via la cloche).
+- **Fidélité / gamification** — points, niveaux et badges débloqués au fil des séances
+  pour encourager la régularité des soins.
+- **Témoignages patients** — partage d'expérience (note + texte) affiché sur l'accueil
+  pour renforcer la confiance (intégration sociale).
 - **Multilingue** — bascule Français / Anglais (mémorisée).
 - **Responsive** — mise en page adaptée mobile et desktop (menu burger, grilles fluides).
 - **Sécurité** — mention de chiffrement des données et de conformité aux standards de
