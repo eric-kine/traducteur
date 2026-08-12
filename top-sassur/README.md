@@ -69,6 +69,21 @@ top-sassur/
 > `standalone.html` est **généré** à partir des fichiers ci-dessus (CSS/JS/images
 > intégrés). Si vous modifiez `index.html`, `css/` ou `js/`, régénérez-le.
 
+## Version production (serveur + base de données)
+
+Une **version connectée** existe dans le dossier [`server/`](server/) : un vrai
+serveur avec base de données, comptes patients + admin sécurisés, données partagées
+entre appareils, reçus PDF côté serveur et paiements Orange Money / MTN Mobile Money
+branchables (via l'agrégateur Campay). Voir [`server/README.md`](server/README.md).
+
+| | Démo (ce dossier) | Production (`server/`) |
+|---|---|---|
+| Lancement | double-clic sur `standalone.html` | `python server.py` |
+| Données | dans le navigateur (localStorage) | base de données partagée |
+| Comptes | non | patients + admin sécurisés |
+| Paiement | simulé | sandbox + Campay (OM/MoMo) réel |
+| Reçu PDF | généré dans le navigateur | généré par le serveur |
+
 ## Vers la production
 
 Ce prototype est prêt à être branché sur un back-end réel. Prochaines étapes recommandées :
