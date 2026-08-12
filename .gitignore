@@ -17,3 +17,7 @@ Thumbs.db
 # Base de données locale et secrets du serveur
 *.db
 .env
+.env.runtime
+
+# Journaux d'exécution du serveur
+*.log
