@@ -72,6 +72,12 @@ son code PIN Mobile Money ; l'application confirme automatiquement le rendez-vou
 > branchez un prestataire carte (Stripe, ou l'offre carte de l'agrégateur) sur le
 > même modèle dans `payments.py`.
 
+## Mise en ligne (déploiement)
+
+👉 **Guide pas à pas dans [`DEPLOY.md`](DEPLOY.md)** : mise en ligne en quelques
+clics sur Render (gratuit), Railway, ou via Docker. Un blueprint `render.yaml`, un
+`Procfile` et un `Dockerfile` sont fournis, prêts à l'emploi.
+
 ## Mise en production
 
 Le serveur intégré de Flask convient au test, **pas** à la production. Pour un
