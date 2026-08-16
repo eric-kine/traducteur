@@ -21,6 +21,10 @@ services:
         sync: false                  # à saisir dans le tableau de bord Render
       - key: PAYMENT_PROVIDER
         value: sandbox
+      # URL publique (QR code des reçus). Renseignez l'URL Render du service,
+      # ex. https://top-sassur.onrender.com
+      # - key: PUBLIC_BASE_URL
+      #   sync: false
       # Paiements réels Orange Money / MTN MoMo (à renseigner dans Render) :
       # - key: PAYMENT_PROVIDER
       #   value: campay

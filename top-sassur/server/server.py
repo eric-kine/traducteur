@@ -98,6 +98,7 @@ def init_db() -> None:
             homecare INTEGER NOT NULL DEFAULT 0,
             total INTEGER NOT NULL,
             status TEXT NOT NULL DEFAULT 'pending_payment',
+            verify_token TEXT,
             created_at TEXT NOT NULL
         );
         CREATE TABLE IF NOT EXISTS payments (
@@ -112,6 +113,18 @@ def init_db() -> None:
             title TEXT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL
         );
         """
+    )
+    # Migration : ajoute verify_token aux bases créées avant cette fonctionnalité.
+    cols = {r[1] for r in con.execute("PRAGMA table_info(appointments)").fetchall()}
+    if "verify_token" not in cols:
+        con.execute("ALTER TABLE appointments ADD COLUMN verify_token TEXT")
+    # Créneau unique par établissement : un même établissement ne peut avoir deux
+    # rendez-vous « actifs » (en attente de paiement ou payés) à la même date/heure.
+    # Les soins à domicile (homecare=1) n'occupent pas de créneau d'établissement.
+    con.execute(
+        """CREATE UNIQUE INDEX IF NOT EXISTS ux_facility_slot
+           ON appointments (facility_id, date, time)
+           WHERE homecare = 0 AND status IN ('pending_payment', 'paid')"""
     )
     # seed facilities
     if con.execute("SELECT COUNT(*) FROM facilities").fetchone()[0] == 0:
@@ -176,6 +189,25 @@ def zone_label(zid: str, lang: str) -> str:
 
 def fmt_fcfa(n: int) -> str:
     return f"{n:,}".replace(",", " ") + " FCFA"
+
+
+def public_base_url() -> str:
+    """URL publique de base, pour que le QR code du reçu soit scannable depuis un
+    téléphone. Priorité à PUBLIC_BASE_URL (déploiement), sinon l'hôte de la requête."""
+    env = os.environ.get("PUBLIC_BASE_URL")
+    if env:
+        return env.rstrip("/")
+    return request.url_root.rstrip("/")
+
+
+def slot_taken(db: sqlite3.Connection, facility_id: int, date: str, time: str) -> bool:
+    """Un créneau d'établissement est-il déjà occupé (RDV en attente ou payé) ?"""
+    return db.execute(
+        """SELECT 1 FROM appointments
+           WHERE facility_id=? AND date=? AND time=? AND homecare=0
+             AND status IN ('pending_payment', 'paid') LIMIT 1""",
+        (facility_id, date, time),
+    ).fetchone() is not None
 
 
 def appointment_json(row: sqlite3.Row, lang: str = "fr") -> dict:
@@ -251,6 +283,22 @@ def list_facilities():
     return jsonify([dict(r) for r in rows])
 
 
+@app.get("/api/facilities/<int:fid>/slots")
+def facility_slots(fid: int):
+    """Créneaux déjà pris pour un établissement à une date donnée, afin que le
+    frontend puisse les griser et empêcher toute double réservation."""
+    date = (request.args.get("date") or "").strip()
+    if not date:
+        return jsonify(taken=[])
+    rows = get_db().execute(
+        """SELECT time FROM appointments
+           WHERE facility_id=? AND date=? AND homecare=0
+             AND status IN ('pending_payment', 'paid')""",
+        (fid, date),
+    ).fetchall()
+    return jsonify(taken=[r["time"] for r in rows])
+
+
 @app.post("/api/admin/facilities")
 @require_admin
 def add_facility():
@@ -302,15 +350,24 @@ def create_appointment():
     if not fac:
         return jsonify(error="Établissement invalide."), 400
     homecare = bool(d.get("homecare"))
+    # Blocage des doubles réservations : un créneau d'établissement (hors domicile)
+    # déjà pris — en attente de paiement ou payé — ne peut être réservé à nouveau.
+    if not homecare and slot_taken(db, fac["id"], date, time):
+        return jsonify(error="Ce créneau vient d'être réservé. Choisissez une autre heure."), 409
     total = fac["price"] + (HOME_FEE if homecare else 0)
     ref = "TS-" + uuid.uuid4().hex[:6].upper()
-    cur = db.execute(
-        """INSERT INTO appointments
-           (ref, patient_id, zones, wellness, facility_id, date, time, homecare, total, status, created_at)
-           VALUES (?,?,?,?,?,?,?,?,?, 'pending_payment', ?)""",
-        (ref, g.patient_id, json.dumps(zones), int(wellness), fac["id"], date, time,
-         int(homecare), total, dt.datetime.utcnow().isoformat()),
-    )
+    verify_token = uuid.uuid4().hex
+    try:
+        cur = db.execute(
+            """INSERT INTO appointments
+               (ref, patient_id, zones, wellness, facility_id, date, time, homecare, total, status, verify_token, created_at)
+               VALUES (?,?,?,?,?,?,?,?,?, 'pending_payment', ?, ?)""",
+            (ref, g.patient_id, json.dumps(zones), int(wellness), fac["id"], date, time,
+             int(homecare), total, verify_token, dt.datetime.utcnow().isoformat()),
+        )
+    except sqlite3.IntegrityError:
+        # L'index unique a bloqué une réservation concurrente sur le même créneau.
+        return jsonify(error="Ce créneau vient d'être réservé. Choisissez une autre heure."), 409
     db.commit()
     row = db.execute("SELECT * FROM appointments WHERE id=?", (cur.lastrowid,)).fetchone()
     return jsonify(appointment_json(row))
@@ -337,6 +394,13 @@ def receipt_pdf(aid: int):
         return jsonify(error="Rendez-vous introuvable."), 404
     if row["status"] != "paid":
         return jsonify(error="Reçu disponible après paiement."), 402
+    # Jeton de vérification : généré rétroactivement pour les anciens rendez-vous.
+    token = row["verify_token"]
+    if not token:
+        token = uuid.uuid4().hex
+        db = get_db()
+        db.execute("UPDATE appointments SET verify_token=? WHERE id=?", (token, aid))
+        db.commit()
     ap = appointment_json(row, lang)
     pat = get_db().execute("SELECT name FROM patients WHERE id=?", (g.patient_id,)).fetchone()
     en = lang == "en"
@@ -352,6 +416,7 @@ def receipt_pdf(aid: int):
         ("Home care" if en else "Soins à domicile",
          ("Yes" if en else "Oui") if ap["homecare"] else ("No" if en else "Non")),
     ]
+    verify_url = f"{public_base_url()}/verify/{token}"
     pdf = build_receipt_pdf(
         brand="Top S'ASSUR",
         subtitle="Official care receipt" if en else "Reçu officiel de prise en charge",
@@ -362,7 +427,11 @@ def receipt_pdf(aid: int):
             "Present this at the facility on the day of your appointment."
             if en else "À présenter à l'accueil de l'établissement le jour du rendez-vous.",
             dt.datetime.fromisoformat(ap["createdAt"]).strftime("%d/%m/%Y %H:%M"),
+            ("Scan the QR code to verify this receipt: " if en
+             else "Scannez le QR code pour vérifier ce reçu : ") + verify_url,
         ],
+        qr_url=verify_url,
+        qr_caption="Verify" if en else "Vérifier",
     )
     return Response(pdf, mimetype="application/pdf", headers={
         "Content-Disposition": f'inline; filename="recu-top-sassur-{ap["ref"]}.pdf"'
@@ -491,6 +560,72 @@ def admin_payments():
            FROM payments p JOIN appointments a ON a.id=p.appointment_id
            ORDER BY p.id DESC LIMIT 200""").fetchall()
     return jsonify([dict(r) for r in rows])
+
+
+# --------------------------------------------------------------------------- #
+# Vérification publique d'un reçu (cible du QR code)
+# --------------------------------------------------------------------------- #
+def _verify_page(title: str, valid: bool, lines: list[tuple[str, str]], note: str) -> str:
+    badge = ("✓ " + ("Reçu authentique" if valid else "")) if valid else "✗ Reçu introuvable"
+    color = "#1f7a34" if valid else "#b3261e"
+    rows = "".join(
+        f'<div class="row"><span>{k}</span><strong>{v}</strong></div>' for k, v in lines
+    )
+    return f"""<!doctype html><html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title} — Top S'ASSUR</title>
+<style>
+  :root {{ color-scheme: light; }}
+  body {{ font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: #f2f7f3; color: #14231a; margin: 0; padding: 2rem 1rem; }}
+  .card {{ max-width: 440px; margin: 2rem auto; background: #fff; border-radius: 18px;
+    box-shadow: 0 12px 40px rgba(20,60,35,.12); overflow: hidden; }}
+  .head {{ background: {color}; color: #fff; padding: 1.4rem 1.6rem; }}
+  .head h1 {{ font-size: 1.05rem; margin: 0 0 .3rem; letter-spacing: .04em; }}
+  .head .badge {{ font-size: 1.35rem; font-weight: 700; }}
+  .body {{ padding: 1.2rem 1.6rem 1.6rem; }}
+  .row {{ display: flex; justify-content: space-between; gap: 1rem;
+    padding: .7rem 0; border-bottom: 1px solid #eef3ef; font-size: .95rem; }}
+  .row span {{ color: #5a6b60; }} .row strong {{ text-align: right; }}
+  .note {{ margin-top: 1rem; font-size: .82rem; color: #6a7a70; line-height: 1.5; }}
+</style></head><body>
+  <div class="card">
+    <div class="head"><h1>TOP S'ASSUR</h1><div class="badge">{badge}</div></div>
+    <div class="body">{rows}<p class="note">{note}</p></div>
+  </div>
+</body></html>"""
+
+
+@app.get("/verify/<token>")
+def verify_receipt(token: str):
+    """Page publique confirmant l'authenticité d'un reçu SANS exposer de données
+    médicales (aucune zone du corps ni symptôme). Cible du QR code du PDF."""
+    row = get_db().execute(
+        "SELECT * FROM appointments WHERE verify_token=?", (token,)
+    ).fetchone()
+    if not row or row["status"] != "paid":
+        html = _verify_page(
+            "Vérification", False, [],
+            "Aucun reçu payé ne correspond à ce code. Vérifiez le QR code ou "
+            "rapprochez-vous de Top S'ASSUR.")
+        return Response(html, mimetype="text/html", status=404)
+    fac = None
+    if row["facility_id"]:
+        fac = get_db().execute("SELECT name, city FROM facilities WHERE id=?",
+                               (row["facility_id"],)).fetchone()
+    lines = [
+        ("Référence", row["ref"]),
+        ("Établissement", f'{fac["name"]} — {fac["city"]}' if fac else
+         ("Soins à domicile" if row["homecare"] else "—")),
+        ("Date", f'{row["date"]} — {row["time"]}'),
+        ("Statut", "Payé ✓"),
+        ("Montant", fmt_fcfa(row["total"])),
+    ]
+    html = _verify_page(
+        "Vérification", True, lines,
+        "Ce reçu a bien été émis par Top S'ASSUR. Les informations médicales "
+        "du patient ne sont pas divulguées sur cette page de vérification.")
+    return Response(html, mimetype="text/html")
 
 
 # --------------------------------------------------------------------------- #

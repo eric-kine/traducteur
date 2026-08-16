@@ -168,6 +168,12 @@ main{max-width:1080px;margin:0 auto;padding:0 1.2rem 3rem}
 .timeslots{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-top:.6rem}
 .slot{border:1.5px solid var(--green-200);background:#fff;border-radius:8px;padding:.45rem;font-weight:600;font-size:.85rem;color:var(--green-800)}
 .slot.sel{background:var(--gr);color:#fff;border-color:transparent}
+.slot.taken{background:#f1f2f1;border-color:#e2e5e2;color:#9aa39c;cursor:not-allowed;text-decoration:line-through;font-size:.72rem}
+
+/* bandeau non-diagnostic (parcours de réservation) */
+.wizard__notice{display:flex;gap:.4rem;align-items:flex-start;background:var(--green-50);
+  border:1px solid var(--green-200);border-left:4px solid var(--gr);border-radius:10px;
+  padding:.7rem .9rem;margin:0 0 1.2rem;color:var(--green-800);font-size:.82rem;line-height:1.4}
 
 /* payment */
 .pay{display:grid;grid-template-columns:260px 1fr;gap:1.6rem}

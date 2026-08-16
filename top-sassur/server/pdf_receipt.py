@@ -25,9 +25,43 @@ def _text(x: int, y: int, size: int, font: bytes, s: str) -> bytes:
     return b"BT /%b %d Tf %d %d Td (%b) Tj ET\n" % (font, size, x, y, _esc(s))
 
 
+def _qr_content(url: str, *, right: float = 535, top: float = 828, box: float = 78) -> bytes:
+    """Dessine un QR code (vers ``url``) en rectangles vectoriels noirs, en haut à
+    droite du reçu. Rendu pur : la matrice vient de la librairie ``qrcode`` (sans
+    Pillow). Si ``qrcode`` est absent, retourne un contenu vide (QR simplement omis).
+    """
+    try:
+        import qrcode  # dépendance légère, pur Python pour la matrice
+    except Exception:
+        return b""
+    q = qrcode.QRCode(border=1, error_correction=qrcode.constants.ERROR_CORRECT_M)
+    q.add_data(url)
+    q.make(fit=True)
+    matrix = q.get_matrix()
+    n = len(matrix)
+    ms = box / n
+    x0 = right - box
+    # Fond blanc sous le QR (garantit le contraste même sur un aplat coloré).
+    out = b"1 1 1 rg\n%.2f %.2f %.2f %.2f re f\n" % (x0 - 2, top - box - 2, box + 4, box + 4)
+    out += b"0 0 0 rg\n"
+    for r, rowvals in enumerate(matrix):
+        for ccol, dark in enumerate(rowvals):
+            if dark:
+                x = x0 + ccol * ms
+                y = top - (r + 1) * ms
+                out += b"%.2f %.2f %.2f %.2f re\n" % (x, y, ms + 0.3, ms + 0.3)
+    out += b"f\n"
+    return out
+
+
 def build_receipt_pdf(*, brand: str, subtitle: str, rows: list[tuple[str, str]],
-                      total_label: str, total_value: str, footer_lines: list[str]) -> bytes:
+                      total_label: str, total_value: str, footer_lines: list[str],
+                      qr_url: str | None = None, qr_caption: str = "") -> bytes:
     c = b""
+    if qr_url:
+        c += _qr_content(qr_url)
+        if qr_caption:
+            c += b"0.45 0.52 0.47 rg\n" + _text(470, 742, 8, b"F1", qr_caption)
     c += b"0.12 0.46 0.20 rg\n" + _text(60, 792, 22, b"F2", brand)
     c += b"0.35 0.42 0.37 rg\n" + _text(60, 774, 11, b"F1", subtitle)
     c += b"0.17 0.55 0.20 RG 2 w 60 766 m 535 766 l S\n"

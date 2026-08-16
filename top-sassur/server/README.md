@@ -12,7 +12,14 @@ n'importe quel téléphone, et l'administrateur voit toute l'activité en temps 
 - **Base de données** SQLite (un simple fichier, rien à installer).
 - **Paiements** : mode *sandbox* (simulation) activé par défaut, et intégration
   réelle **Campay** (Orange Money + MTN Mobile Money) prête à brancher.
-- **Reçus PDF** générés côté serveur.
+- **Reçus PDF** générés côté serveur, avec **QR code de vérification**.
+- **Vérification publique des reçus** : le QR code du PDF pointe vers une page
+  `/verify/<jeton>` qui confirme l'authenticité du reçu (référence, établissement,
+  date, montant, statut payé) **sans exposer aucune donnée médicale**.
+- **Blocage des doubles réservations** : un créneau (établissement + date + heure)
+  déjà pris ne peut plus être réservé — garanti côté serveur (contrôle + index
+  unique) et signalé côté interface (créneaux grisés).
+- **Mention non-diagnostic** visible tout au long du parcours de réservation.
 - L'interface web complète est servie par le serveur (même design que la démo).
 
 ## Démarrage rapide
@@ -49,6 +56,7 @@ Copiez `.env.example` puis définissez les valeurs comme variables d'environneme
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Compte administrateur | `admin` / `admin123` |
 | `HOME_FEE` | Supplément soins à domicile (FCFA) | `3000` |
 | `PORT` | Port d'écoute | `5000` |
+| `PUBLIC_BASE_URL` | URL publique pour le QR code des reçus (ex. `https://…onrender.com`) | *(déduit de la requête)* |
 | `PAYMENT_PROVIDER` | `sandbox` ou `campay` | `sandbox` |
 | `CAMPAY_USERNAME` / `CAMPAY_PASSWORD` / `CAMPAY_BASE_URL` | Identifiants Campay | — |
 
@@ -96,8 +104,8 @@ déploiement réel :
 server/
 ├── server.py         # application Flask : API + service du site
 ├── payments.py       # paiements (sandbox + Campay Orange Money / MoMo)
-├── pdf_receipt.py    # génération du reçu PDF (Python pur)
-├── requirements.txt  # dépendances (Flask, PyJWT, requests)
+├── pdf_receipt.py    # génération du reçu PDF + QR code (Python pur)
+├── requirements.txt  # dépendances (Flask, PyJWT, requests, qrcode)
 ├── .env.example      # modèle de configuration
 └── webapp/           # interface web (HTML/CSS/JS) servie par le serveur
 ```

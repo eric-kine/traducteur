@@ -39,6 +39,9 @@
       "admin.city": "Ville", "admin.price": "Tarif séance (FCFA)", "admin.add": "Ajouter",
       "foot.rights": "Assurance santé kinésithérapie",
       "foot.security": "🔒 Données patients chiffrées — conformité aux standards de protection des données médicales.",
+      "foot.nondiag": "Top S'ASSUR facilite l'accès aux soins de kinésithérapie et ne se substitue pas à un avis médical.",
+      "notice.nondiag": "ℹ️ Top S'ASSUR vous oriente vers un professionnel : les informations saisies ne constituent pas un diagnostic médical.",
+      "slot.taken": "Réservé",
       "receipt.download": "Télécharger le reçu PDF", "receipt.close": "Fermer",
       "pay.phone": "Numéro de téléphone", "pay.name": "Nom du titulaire",
       "pay.card": "Numéro de carte", "pay.exp": "Expiration", "pay.cvv": "CVV",
@@ -102,6 +105,9 @@
       "admin.price": "Session price (FCFA)", "admin.add": "Add",
       "foot.rights": "Physiotherapy health insurance",
       "foot.security": "🔒 Encrypted patient data — compliant with medical data-protection standards.",
+      "foot.nondiag": "Top S'ASSUR facilitates access to physiotherapy care and is not a substitute for medical advice.",
+      "notice.nondiag": "ℹ️ Top S'ASSUR guides you to a professional: the information you enter is not a medical diagnosis.",
+      "slot.taken": "Booked",
       "receipt.download": "Download PDF receipt", "receipt.close": "Close",
       "pay.phone": "Phone number", "pay.name": "Cardholder name", "pay.card": "Card number",
       "pay.exp": "Expiry", "pay.cvv": "CVV",
@@ -183,7 +189,7 @@
   /* ---------------- booking state ---------------- */
   const state = {
     step: 1, zones: new Set(), wellness: false, facilityId: null,
-    date: null, time: null, homecare: false, payMethod: null, payValid: false,
+    date: null, time: null, homecare: false, takenSlots: [], payMethod: null, payValid: false,
     calMonth: (() => { const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() }; })()
   };
   let facilities = [];
@@ -355,10 +361,25 @@
     });
   }
 
-  function renderSchedule() {
-    renderCalendar(); renderClock(); renderTimeslots();
+  async function fetchTakenSlots() {
+    state.takenSlots = [];
+    // Les soins à domicile n'occupent pas de créneau d'établissement : aucun grisage.
+    if (!state.facilityId || !state.date || state.homecare) return;
+    try {
+      const r = await api(`/facilities/${state.facilityId}/slots?date=${state.date}`);
+      state.takenSlots = r.taken || [];
+      if (state.time && state.takenSlots.includes(state.time)) state.time = null;
+    } catch { state.takenSlots = []; }
+  }
+  async function renderSchedule() {
+    renderCalendar();
+    await fetchTakenSlots();
+    renderClock(); renderTimeslots();
     $("#homecare").checked = state.homecare;
-    $("#homecare").onchange = (e) => { state.homecare = e.target.checked; updateCost(); };
+    $("#homecare").onchange = async (e) => {
+      state.homecare = e.target.checked; updateCost();
+      await fetchTakenSlots(); renderTimeslots();
+    };
   }
   function renderCalendar() {
     const { y, m } = state.calMonth, cal = $("#calendar");
@@ -378,12 +399,19 @@
       if (nm < 0) { nm = 11; ny--; } if (nm > 11) { nm = 0; ny++; }
       state.calMonth = { y: ny, m: nm }; renderCalendar();
     }));
-    cal.querySelectorAll("[data-day]").forEach(b => b.addEventListener("click", () => { state.date = b.dataset.day; renderCalendar(); }));
+    cal.querySelectorAll("[data-day]").forEach(b => b.addEventListener("click", () => { state.date = b.dataset.day; renderSchedule(); }));
   }
   const SLOTS = ["08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
   function renderTimeslots() {
     const wrap = $("#timeslots"); wrap.innerHTML = "";
-    SLOTS.forEach(s => { const b = el("button", "slot" + (state.time === s ? " sel" : ""), s); b.addEventListener("click", () => { state.time = s; renderTimeslots(); renderClock(); }); wrap.appendChild(b); });
+    SLOTS.forEach(s => {
+      const taken = state.takenSlots.includes(s);
+      const b = el("button", "slot" + (state.time === s ? " sel" : "") + (taken ? " taken" : ""),
+        taken ? `${s} · ${t("slot.taken")}` : s);
+      if (taken) { b.disabled = true; b.title = t("slot.taken"); }
+      else b.addEventListener("click", () => { state.time = s; renderTimeslots(); renderClock(); });
+      wrap.appendChild(b);
+    });
   }
   function renderClock() {
     const [hh, mm] = (state.time || "10:00").split(":").map(Number);
@@ -459,11 +487,20 @@
     saving = true;
     const btn = $("#saveBtn"); btn.disabled = true;
     const status = $("#payStatus");
+    // Création du RDV : un créneau pris entre-temps renvoie l'utilisateur à l'étape horaire.
+    let appt;
     try {
-      const appt = await api("/appointments", { method: "POST", auth: true, body: {
+      appt = await api("/appointments", { method: "POST", auth: true, body: {
         zones: [...state.zones], wellness: state.wellness, facility_id: state.facilityId,
         date: state.date, time: state.time, homecare: state.homecare
       }});
+    } catch (ex) {
+      saving = false; btn.disabled = false;
+      toast(ex.message);
+      state.time = null; state.step = 3; renderWizard();
+      return;
+    }
+    try {
       state.step = 4; renderWizard();
       status.className = "pay-status show"; status.textContent = t("pay.processing");
       const pay = await api("/payments", { method: "POST", auth: true, body: {
