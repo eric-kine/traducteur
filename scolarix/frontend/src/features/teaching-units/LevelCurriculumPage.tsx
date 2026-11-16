@@ -1,6 +1,8 @@
 import { Fragment, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, BookMarked, ClipboardList, Pencil, Plus, Search, Trash2, Trophy } from 'lucide-react';
+import { ArrowLeft, BookMarked, ClipboardList, FileArchive, FileText, Pencil, Plus, Search, Trash2, Trophy } from 'lucide-react';
+import { downloadLevelSyllabi } from '../syllabi/syllabi.api';
+import { useCurrentYear } from '../academic-years/academic-years.api';
 import { formatAmount, formatHours, type TeachingUnitDto, type TeachingUnitTotals } from '@scolarix/shared';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -61,6 +63,8 @@ export function LevelCurriculumPage() {
   const del = useDeleteTeachingUnit(levelId);
   const [form, setForm] = useState<{ open: boolean; unit?: TeachingUnitDto | null; semester?: number }>({ open: false });
   const [toDelete, setToDelete] = useState<TeachingUnitDto | null>(null);
+  const currentYear = useCurrentYear();
+  const [zipping, setZipping] = useState(false);
 
   if (isLoading && !data) return <p className="text-muted-foreground">Chargement…</p>;
   if (error instanceof ApiError && error.status === 403) return <p className="text-destructive">Vous n'avez pas accès à ce niveau.</p>;
@@ -92,6 +96,7 @@ export function LevelCurriculumPage() {
         <TableCell>
           <div className="flex justify-end gap-1">
             <Button variant="ghost" size="icon" title="Saisir les notes" asChild><Link to={`/grades/${u.id}`}><ClipboardList /></Link></Button>
+            <Button variant="ghost" size="icon" title="Syllabus" asChild><Link to={`/syllabus/${u.id}`}><FileText /></Link></Button>
             <Button variant="ghost" size="icon" title="Modifier" onClick={() => setForm({ open: true, unit: u })}><Pencil /></Button>
             <Button variant="ghost" size="icon" title="Supprimer" onClick={() => setToDelete(u)}><Trash2 className="text-destructive" /></Button>
           </div>
@@ -112,6 +117,11 @@ export function LevelCurriculumPage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild><Link to={`/admin/levels/${levelId}/results`}><Trophy /> Résultats</Link></Button>
+          <Button variant="outline" disabled={!currentYear || !data.data.length || zipping}
+            title={currentYear ? `Syllabus de toutes les UE (${currentYear.label})` : 'Créez une année académique'}
+            onClick={async () => { setZipping(true); await downloadLevelSyllabi(levelId, currentYear!.label, `${school?.code ?? ''}-${level.code}`); setZipping(false); }}>
+            <FileArchive /> {zipping ? 'Génération…' : 'Syllabus (ZIP)'}
+          </Button>
           {canEdit && <Button onClick={() => setForm({ open: true, unit: null })}><Plus /> Nouvelle UE</Button>}
         </div>
       </div>

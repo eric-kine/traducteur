@@ -18,6 +18,7 @@ import { teachersRouter } from './modules/teachers/teachers.routes';
 import { assignmentsRouter, coverageRouter } from './modules/assignments/assignments.routes';
 import { gradesRouter } from './modules/grades/grades.routes';
 import { certificatesRouter, publicVerifyRouter } from './modules/certificates/certificates.routes';
+import { syllabiRouter } from './modules/syllabi/syllabi.routes';
 import { errorHandler, notFoundHandler } from './common/middlewares/error-handler';
 
 export function createApp() {
@@ -40,6 +41,7 @@ export function createApp() {
   // Notes, résultats et relevés (chemins complets, monté avant les autres routeurs)
   app.use('/api', gradesRouter);
   app.use('/api', certificatesRouter);
+  app.use('/api', syllabiRouter);
   app.use('/api/users', usersRouter);
   app.use('/api/institute', instituteRouter);
   app.use('/api/schools/:schoolId/specialties', schoolSpecialtiesRouter);

@@ -21,6 +21,7 @@ import { GradeSheetPage } from '@/features/grades/GradeSheetPage';
 import { LevelResultsPage } from '@/features/grades/LevelResultsPage';
 import { CertificatesPage } from '@/features/certificates/CertificatesPage';
 import { VerifyPage } from '@/features/certificates/VerifyPage';
+import { SyllabusEditorPage } from '@/features/syllabi/SyllabusEditorPage';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -56,6 +57,7 @@ export default function App() {
               </Route>
               <Route element={<ProtectedRoute roles={['ADMIN', 'SCOLARITE', 'ENSEIGNANT']} />}>
                 <Route path="grades/:unitId" element={<GradeSheetPage />} />
+                <Route path="syllabus/:unitId" element={<SyllabusEditorPage />} />
               </Route>
               <Route element={<ProtectedRoute roles={['ADMIN']} />}>
                 <Route path="users" element={<UsersPage />} />

@@ -359,3 +359,43 @@ export interface VerificationResult {
   level: string;
   academicYear: string;
 }
+
+export interface SyllabusTeacher {
+  title: string | null;
+  firstName: string;
+  lastName: string;
+  email: string;
+  grade: string | null;
+  sessionTypes: import('./enums').SessionType[];
+  isCoordinator: boolean;
+}
+
+/** Tout ce qu'il faut pour éditer ou imprimer le syllabus d'une UE pour une année. */
+export interface SyllabusDto {
+  academicYear: { id: string; label: string };
+  exists: boolean;
+  status: 'BROUILLON' | 'PUBLIE' | 'ARCHIVE';
+  updatedAt: string | null;
+  updatedBy: string | null;
+  canEdit: boolean;
+  teachingUnit: {
+    id: string; code: string; title: string; description: string | null; semester: number; credits: number; coefficient: number;
+    cmHours: number; tdHours: number; tpHours: number; totalHours: number; ccWeight: number; examWeight: number; tpWeight: number;
+    objectives: string | null; prerequisites: string | null; bibliography: string | null;
+  };
+  level: { id: string; code: string; name: string };
+  specialty: { code: string; name: string } | null;
+  school: { code: string; name: string; directorName: string | null };
+  institute: { name: string; acronym: string | null; city: string | null; country: string | null; email: string | null; phone: string | null; address: string | null };
+  teachers: SyllabusTeacher[];
+  /** Champs complémentaires (null = non renseigné ; pour objectifs/prérequis/bibliographie, le texte de l'UE est utilisé) */
+  fields: {
+    objectives: string | null;
+    competencies: string | null;
+    prerequisites: string | null;
+    content: { title: string; sessionType: import('./enums').SessionType | null; hours: number | null; description: string | null }[];
+    teachingMethods: string | null;
+    evaluationMethods: string | null;
+    bibliography: string | null;
+  };
+}

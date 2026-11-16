@@ -38,7 +38,16 @@ function getBrowser() {
   return browserPromise;
 }
 
-export async function htmlToPdf(html: string): Promise<Buffer> {
+/** Pied de page facultatif (texte à gauche + « page X / Y » à droite), imprimé dans la marge basse. */
+export interface PdfOptions { footerText?: string }
+
+const footerTemplate = (text: string) => `
+  <div style="width:100%; font-family: Arial, sans-serif; font-size:7px; color:#6b7280; padding:0 12mm; display:flex; justify-content:space-between;">
+    <span>${text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)}</span>
+    <span>Page <span class="pageNumber"></span> / <span class="totalPages"></span></span>
+  </div>`;
+
+export async function htmlToPdf(html: string, opts: PdfOptions = {}): Promise<Buffer> {
   const browser = await getBrowser();
   const page = await browser.newPage();
   try {
@@ -46,7 +55,12 @@ export async function htmlToPdf(html: string): Promise<Buffer> {
     await page.setRequestInterception(true);
     page.on('request', (req) => (req.url().startsWith('data:') ? req.continue() : req.abort()));
     await page.setContent(html, { waitUntil: 'load' });
-    const pdf = await page.pdf({ format: 'A4', printBackground: true, preferCSSPageSize: true });
+    const pdf = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      preferCSSPageSize: true,
+      ...(opts.footerText !== undefined && { displayHeaderFooter: true, headerTemplate: '<span></span>', footerTemplate: footerTemplate(opts.footerText) }),
+    });
     return Buffer.from(pdf);
   } finally {
     await page.close();

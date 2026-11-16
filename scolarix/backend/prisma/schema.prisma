@@ -135,6 +135,7 @@ model User {
   gradesEntered       Grade[]        @relation("GradesEntered")
   certificatesIssued  Certificate[]  @relation("CertificatesIssued")
   certificatesRevoked Certificate[]  @relation("CertificatesRevoked")
+  syllabiUpdated      Syllabus[]     @relation("SyllabiUpdated")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -547,26 +548,33 @@ model Grade {
 //  PÉDAGOGIE : SYLLABUS
 // =============================================================================
 
-/// Syllabus d'une UE pour une année. Pré-rempli automatiquement à partir de
-/// l'UE (volumes, crédits, enseignants) puis complété par le coordinateur.
+/// Syllabus d'une UE pour une année académique : les « champs complémentaires »
+/// rédigés par le responsable de l'UE. Le PDF est généré à la demande en combinant :
+///  - les données de l'UE (code, intitulé, crédits, volumes CM/TD/TP, pondérations) ;
+///  - les enseignants affectés (le responsable = affectation isCoordinator) ;
+///  - les champs ci-dessous. objectives / prerequisites / bibliography sont pré-remplis
+///    depuis l'UE ; s'ils restent vides (null), le texte de l'UE est utilisé.
 model Syllabus {
   id                String            @id @default(uuid())
   status            PublicationStatus @default(BROUILLON)
-  objectives        String? // objectifs pédagogiques
-  prerequisites     String?
-  /// Plan du cours : [{ "chapter": "Introduction", "hours": 4, "type": "CM" }, …]
-  content           Json?
-  evaluationMethods String? // modalités d'évaluation (texte généré à partir des pondérations)
-  bibliography      String?
+  objectives        String? // objectifs pédagogiques (null → ceux de l'UE)
   competencies      String? // compétences visées
-  pdfUrl            String? // dernier PDF généré
-  generatedAt       DateTime?
+  prerequisites     String? // (null → ceux de l'UE)
+  /// Contenu détaillé : [{ "title": "Introduction", "sessionType": "CM", "hours": 4, "description": "…" }, …]
+  content           Json?
+  teachingMethods   String? // méthodes pédagogiques
+  evaluationMethods String? // précisions sur l'évaluation (en plus du texte généré depuis les pondérations)
+  bibliography      String? // (null → celle de l'UE)
+  generatedAt       DateTime? // dernière génération PDF
 
   teachingUnitId String
   teachingUnit   TeachingUnit @relation(fields: [teachingUnitId], references: [id], onDelete: Restrict)
 
   academicYearId String
   academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+
+  updatedById String?
+  updatedBy   User?   @relation("SyllabiUpdated", fields: [updatedById], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
