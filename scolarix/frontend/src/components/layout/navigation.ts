@@ -1,4 +1,4 @@
-import { Home, KeyRound, Users, type LucideIcon } from 'lucide-react';
+import { Building2, Home, KeyRound, Users, type LucideIcon } from 'lucide-react';
 import type { Role } from '@scolarix/shared';
 
 export interface NavItem {
@@ -12,6 +12,7 @@ export interface NavItem {
 /** Menu latéral. Chaque nouveau module ajoutera ses entrées ici. */
 export const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Accueil', icon: Home },
+  { to: '/admin', label: 'Administration', icon: Building2, roles: ['ADMIN', 'SCOLARITE'] },
   { to: '/users', label: 'Utilisateurs', icon: Users, roles: ['ADMIN'] },
   { to: '/account', label: 'Mon compte', icon: KeyRound },
 ];

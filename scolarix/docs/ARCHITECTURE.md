@@ -247,15 +247,14 @@ User ──▶ School (0..1)  // périmètre d'un agent SCOLARITE
 | # | Module | Contenu principal |
 |---|---|---|
 | **0** | Architecture & modèle de données | ✅ ce document + `schema.prisma` |
-| **1** | Socle technique & authentification | Monorepo, Docker PostgreSQL, Express, Prisma client, seed, JWT (login/refresh/logout), middlewares rôles, gestion des utilisateurs, layout frontend + écran de connexion |
-| **2** | Institut, années académiques & écoles | CRUD institut, années (année courante), écoles ; sélecteur d'école global côté front |
-| **3** | Spécialités & niveaux | CRUD par école, ordre des niveaux, cycles |
-| **4** | Unités d'Enseignement | CRUD par niveau/spécialité, quotas CM/TD/TP, total, payé, crédits, pondérations ; maquette pédagogique par niveau |
-| **5** | Étudiants & inscriptions | CRUD étudiants, matricule auto, import CSV/Excel, inscriptions annuelles, création du compte étudiant |
-| **6** | Enseignants & affectations | CRUD enseignants, disponibilités, affectation aux UE, suivi des heures affectées vs quotas, état des heures payées |
-| **7** | Notes | Saisie par UE (enseignant), calcul moyenne UE / semestre / année, crédits, rattrapage, verrouillage, délibération |
-| **8** | Relevés de notes (PDF) | Moteur PDF Puppeteer, gabarit relevé, génération unitaire et en lot, registre + QR de vérification |
-| **9** | Certificats de scolarité (PDF) | Gabarit certificat, génération à la demande, page publique de vérification |
-| **10** | Syllabus | Pré-remplissage automatique depuis l'UE, éditeur, export PDF par UE / par niveau |
-| **11** | Emplois du temps | Salles, algorithme de contraintes, ajustement manuel (glisser-déposer), vues classe/enseignant/salle, export PDF |
-| **12** | Tableaux de bord, recherche & finitions | Statistiques par école, journal d'audit, déploiement (Docker / Render) |
+| **0 bis** | Socle technique & authentification | ✅ JWT + rôles, utilisateurs — [`MODULE-00b-AUTH.md`](MODULE-00b-AUTH.md) |
+| **1** | Institut, écoles, spécialités, niveaux | ✅ CRUD complets, page Administration — [`MODULE-01-STRUCTURE.md`](MODULE-01-STRUCTURE.md) |
+| **2** | Années académiques & Unités d'Enseignement | Années (année courante) ; UE par niveau/spécialité, quotas CM/TD/TP, total, payé, crédits, pondérations ; maquette pédagogique |
+| **3** | Étudiants & inscriptions | CRUD étudiants, matricule auto, import CSV/Excel, inscriptions annuelles, compte étudiant |
+| **4** | Enseignants & affectations | CRUD enseignants, disponibilités, affectation aux UE, heures affectées vs quotas, heures payées |
+| **5** | Notes | Saisie par UE, moyennes UE / semestre / année, crédits, rattrapage, verrouillage, délibération |
+| **6** | Relevés de notes (PDF) | Moteur PDF Puppeteer, gabarit relevé, génération unitaire et en lot, registre + QR de vérification |
+| **7** | Certificats de scolarité (PDF) | Gabarit certificat, génération à la demande, page publique de vérification |
+| **8** | Syllabus | Pré-remplissage automatique depuis l'UE, éditeur, export PDF |
+| **9** | Emplois du temps | Salles, algorithme de contraintes, ajustement manuel, vues classe/enseignant/salle, export PDF |
+| **10** | Tableaux de bord & finitions | Statistiques par école, journal d'audit, déploiement |

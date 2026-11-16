@@ -10,6 +10,8 @@ import { LoginPage } from '@/features/auth/LoginPage';
 import { AccountPage } from '@/features/auth/AccountPage';
 import { HomePage } from '@/features/home/HomePage';
 import { UsersPage } from '@/features/users/UsersPage';
+import { AdminPage } from '@/features/admin/AdminPage';
+import { SchoolDetailPage } from '@/features/schools/SchoolDetailPage';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -30,6 +32,10 @@ export default function App() {
             <Route element={<AppShell />}>
               <Route index element={<HomePage />} />
               <Route path="account" element={<AccountPage />} />
+              <Route element={<ProtectedRoute roles={['ADMIN', 'SCOLARITE']} />}>
+                <Route path="admin" element={<AdminPage />} />
+                <Route path="admin/schools/:id" element={<SchoolDetailPage />} />
+              </Route>
               <Route element={<ProtectedRoute roles={['ADMIN']} />}>
                 <Route path="users" element={<UsersPage />} />
               </Route>

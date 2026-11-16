@@ -2,3 +2,8 @@ export * from './enums';
 export * from './types';
 export * from './schemas/auth.schema';
 export * from './schemas/user.schema';
+export * from './schemas/common';
+export * from './schemas/institute.schema';
+export * from './schemas/school.schema';
+export * from './schemas/specialty.schema';
+export * from './schemas/level.schema';

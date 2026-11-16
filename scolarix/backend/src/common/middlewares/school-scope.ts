@@ -19,3 +19,13 @@ export function assertSchoolAccess(user: AuthUser, schoolId: string): void {
     throw AppError.forbidden("Vous n'avez pas accès à cette école");
   }
 }
+
+/**
+ * Droit de MODIFIER les données d'une école (spécialités, niveaux…) :
+ * ADMIN partout, SCOLARITE uniquement dans son école (ou partout s'il n'a pas d'école).
+ */
+export function assertCanManageSchool(user: AuthUser, schoolId: string): void {
+  if (user.role === 'ADMIN') return;
+  if (user.role === 'SCOLARITE') return assertSchoolAccess(user, schoolId);
+  throw AppError.forbidden();
+}

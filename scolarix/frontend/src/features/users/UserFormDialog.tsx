@@ -10,10 +10,11 @@ import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/select';
 import { FormField } from '@/components/common/FormField';
 import { applyApiErrors } from '@/lib/form-errors';
+import { useSchools } from '../schools/schools.api';
 import { useCreateUser, useUpdateUser } from './users.api';
 
 // En modification, le mot de passe n'est pas demandé (il se réinitialise à part).
-const editSchema = createUserSchema.omit({ password: true, schoolId: true });
+const editSchema = createUserSchema.omit({ password: true });
 type FormValues = z.infer<typeof createUserSchema>;
 
 interface Props {
@@ -32,6 +33,7 @@ export function UserFormDialog({ open, onOpenChange, user }: Props) {
     register,
     handleSubmit,
     reset,
+    watch,
     setError,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
@@ -42,16 +44,19 @@ export function UserFormDialog({ open, onOpenChange, user }: Props) {
     if (open) {
       reset(
         user
-          ? { email: user.email, firstName: user.firstName, lastName: user.lastName, role: user.role }
-          : { email: '', password: '', firstName: '', lastName: '', role: 'ENSEIGNANT' },
+          ? { email: user.email, firstName: user.firstName, lastName: user.lastName, role: user.role, schoolId: user.schoolId }
+          : { email: '', password: '', firstName: '', lastName: '', role: 'ENSEIGNANT', schoolId: null },
       );
     }
   }, [open, user, reset]);
 
+  const role = watch('role');
+  const { data: schools } = useSchools();
+
   const onSubmit = async (values: FormValues) => {
     try {
       if (user) {
-        const { password: _p, schoolId: _s, ...changes } = values;
+        const { password: _p, ...changes } = values;
         await updateUser.mutateAsync({ id: user.id, ...changes });
         toast.success('Utilisateur modifié');
       } else {
@@ -99,6 +104,16 @@ export function UserFormDialog({ open, onOpenChange, user }: Props) {
               ))}
             </NativeSelect>
           </FormField>
+          {role === 'SCOLARITE' && (
+            <FormField id="schoolId" label="École gérée" error={errors.schoolId?.message}>
+              <NativeSelect id="schoolId" {...register('schoolId', { setValueAs: (v) => v || null })}>
+                <option value="">Toutes les écoles</option>
+                {schools?.map((s) => (
+                  <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
+                ))}
+              </NativeSelect>
+            </FormField>
+          )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler

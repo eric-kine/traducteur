@@ -168,11 +168,14 @@ model RefreshToken {
 // =============================================================================
 
 /// L'institut (une seule ligne en pratique, mais modélisé pour rester propre).
+/// Un seul institut en pratique : géré par GET/PUT /api/institute.
 model Institute {
   id           String  @id @default(uuid())
   name         String
   acronym      String? // ex. "ISP"
   address      String?
+  city         String? // "Fait à <ville>" sur les documents officiels
+  country      String?
   phone        String?
   email        String?
   website      String?
@@ -216,10 +219,13 @@ model AcademicYear {
 /// Une école de l'institut (ex. École d'Ingénieurs, École de Commerce).
 model School {
   id           String  @id @default(uuid())
-  code         String  @unique // ex. "EIT" — utilisé dans les matricules
+  code         String  @unique // ex. "EIT" — majuscules, utilisé dans les matricules
   name         String
   description  String?
-  directorName String?
+  directorName String? // signataire des documents de l'école
+  email        String?
+  phone        String?
+  address      String? // si différente de celle de l'institut
   logoUrl      String?
   isActive     Boolean @default(true)
 
@@ -239,11 +245,13 @@ model School {
 
 /// Spécialité / filière d'une école (ex. Génie Logiciel, Réseaux, Finance).
 model Specialty {
-  id          String  @id @default(uuid())
-  code        String // unique au sein de l'école
-  name        String
-  description String?
-  isActive    Boolean @default(true)
+  id           String  @id @default(uuid())
+  code         String // unique au sein de l'école, majuscules (ex. "GL")
+  name         String // ex. "Génie Logiciel"
+  description  String?
+  /// Intitulé officiel du diplôme visé, imprimé sur les relevés
+  diplomaTitle String?
+  isActive     Boolean @default(true)
 
   schoolId String
   school   School @relation(fields: [schoolId], references: [id], onDelete: Restrict)

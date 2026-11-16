@@ -1,4 +1,4 @@
-# Module 1 — Socle technique & authentification
+# Module 0 bis — Socle technique & authentification
 
 ## 1. Modèle de données
 
