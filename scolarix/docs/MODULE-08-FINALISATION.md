@@ -130,4 +130,11 @@ Nouvelle variable `COOKIE_SECURE` : cookie de session réservé au HTTPS, `true`
    - emploi du temps : 9 séances, sans les cours de la spécialité RT ;
    - /students affiche « Accès refusé » ;
    - mobile : pas de défilement horizontal.
-5. **Docker** : construction des 3 images, démarrage de la pile complète, connexion et génération d'un PDF dans les conteneurs (voir le compte rendu du module).
+5. **Docker** (pile `docker-compose.prod.yml` complète, sur le port 8088) :
+   - images construites (API 544 Mo compressée avec Chromium, site 21 Mo) ;
+   - au démarrage : migrations appliquées, puis administrateur créé ;
+   - démo chargée **dans le conteneur**, certificat PDF compris ;
+   - connexions ADMIN et ÉTUDIANTE à travers nginx, session conservée après rechargement ;
+   - tableau de bord, relevé PDF, page publique `/verifier` : tout fonctionne.
+
+   **Défaut trouvé et corrigé** : les en-têtes de sécurité nginx (`X-Frame-Options`…) n'étaient pas envoyés, car un bloc `location` qui définit ses propres `add_header` n'hérite pas de ceux du serveur. Ils sont maintenant inclus dans chaque bloc du site (`docker/security-headers.inc`). Sur `/api`, seuls ceux de l'API sont envoyés, sans doublon.

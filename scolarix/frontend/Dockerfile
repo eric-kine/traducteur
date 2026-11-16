@@ -15,5 +15,6 @@ RUN npm run build --workspace frontend
 
 FROM nginx:1.27-alpine
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY docker/security-headers.inc /etc/nginx/conf.d/security-headers.inc
 COPY --from=build /app/frontend/dist /usr/share/nginx/html
 EXPOSE 80
