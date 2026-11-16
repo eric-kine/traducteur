@@ -19,7 +19,16 @@ const envSchema = z.object({
   PUBLIC_APP_URL: z.string().url().default('http://localhost:5173'),
   /** Cookie de session réservé au HTTPS. Par défaut : oui en production. Mettre "false" UNIQUEMENT pour un essai local en HTTP. */
   COOKIE_SECURE: z.enum(['true', 'false']).optional(),
+  /** Version « tout-en-un » : dossier du site compilé, servi par l'API (même adresse). */
+  FRONTEND_DIR: z.string().optional(),
 });
+
+// Sur Render, l'adresse publique du service est fournie automatiquement (RENDER_EXTERNAL_URL) :
+// elle sert de valeur par défaut pour PUBLIC_APP_URL et CORS_ORIGIN.
+if (process.env.RENDER_EXTERNAL_URL) {
+  process.env.PUBLIC_APP_URL ||= process.env.RENDER_EXTERNAL_URL;
+  process.env.CORS_ORIGIN ||= process.env.RENDER_EXTERNAL_URL;
+}
 
 const parsed = envSchema.safeParse(process.env);
 if (!parsed.success) {

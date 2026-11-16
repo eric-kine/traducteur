@@ -138,7 +138,15 @@ npm test
 npm run typecheck
 ```
 
-## 7. Déploiement avec Docker
+## 7. Déploiement
+
+### 7.0 Le plus simple : Render (quelques clics)
+
+Suivez le guide pas à pas **[DEPLOIEMENT-RENDER.md](DEPLOIEMENT-RENDER.md)**. Le fichier [`render.yaml`](render.yaml) crée automatiquement une base PostgreSQL et un service unique : l'API et le site à la même adresse, en HTTPS. Il utilise l'image « tout-en-un » décrite dans [`Dockerfile`](Dockerfile).
+
+Pour un serveur à vous, utilisez la variante en 3 conteneurs ci-dessous.
+
+### Avec Docker sur votre propre serveur
 
 Trois conteneurs : **db** (PostgreSQL), **api** (Node.js + Chromium), **web** (nginx : site + relais `/api`).
 
@@ -209,6 +217,9 @@ Pour tester la version Docker sur votre ordinateur en `http://localhost:8088` (s
 | `CHROMIUM_PATH` | facultatif | Chemin de Chromium pour les PDF (détecté automatiquement sinon ; `/usr/bin/chromium` en Docker) |
 | `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | les deux | Premier administrateur créé s'il n'existe pas |
 | `POSTGRES_PASSWORD`, `HTTP_PORT` | `.env.production` | Mot de passe de la base, port exposé par `web` |
+| `FRONTEND_DIR` | image tout-en-un | Dossier du site compilé servi par l'API (`/app/web`) |
+| `LOAD_DEMO_DATA` | Render / tout-en-un | `true` : charge la démo au démarrage si la base est vide (jamais pour un usage réel) |
+| `RENDER_EXTERNAL_URL` | fournie par Render | Sert de valeur par défaut à `PUBLIC_APP_URL` et `CORS_ORIGIN` |
 
 Règles de calcul paramétrables (sans variable d'environnement, dans le code partagé) : coefficients du volume payé (`PAID_HOURS_COEFFICIENTS`) et règlement des notes (`GRADING_RULES` : note de validation, compensation, note éliminatoire, « admis avec dettes », mentions).
 

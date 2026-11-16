@@ -1,3 +1,5 @@
+import path from 'node:path';
+import fs from 'node:fs';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -30,7 +32,17 @@ export function createApp() {
   const app = express();
 
   app.set('trust proxy', 1); // IP réelle derrière un proxy (Render, Nginx…)
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          // blob: : photos des étudiants et documents PDF chargés via l'API puis affichés
+          'img-src': ["'self'", 'data:', 'blob:'],
+          'frame-src': ["'self'", 'blob:'],
+        },
+      },
+    }),
+  );
   app.use(cors({ origin: env.CORS_ORIGIN.split(','), credentials: true }));
   app.use(express.json({ limit: '1mb' }));
   app.use(cookieParser());
@@ -70,6 +82,19 @@ export function createApp() {
   app.use('/api/schedules', schedulesRouter);
   app.use('/api/schedule-sessions', sessionsRouter);
   app.use('/api/timetables', timetablesRouter);
+
+  // Version « tout-en-un » (Render, Docker simple) : l'API sert aussi le site compilé.
+  if (env.FRONTEND_DIR) {
+    const dir = path.resolve(env.FRONTEND_DIR);
+    const index = path.join(dir, 'index.html');
+    if (!fs.existsSync(index)) throw new Error(`FRONTEND_DIR invalide : ${index} introuvable`);
+    app.use('/assets', express.static(path.join(dir, 'assets'), { immutable: true, maxAge: '1y' }));
+    app.use(express.static(dir, { index: false }));
+    // Application monopage : toute adresse hors /api renvoie index.html
+    app.get(/^(?!\/api\/).*/, (_req, res) => {
+      res.set('Cache-Control', 'no-cache').sendFile(index);
+    });
+  }
 
   app.use(notFoundHandler);
   app.use(errorHandler);
