@@ -86,10 +86,10 @@ export async function remove(id: string) {
   await findOrFail(id);
   const { _count } = await prisma.academicYear.findUniqueOrThrow({
     where: { id },
-    select: { _count: { select: { enrollments: true, assignments: true, timetables: true, syllabi: true } } },
+    select: { _count: { select: { enrollments: true, assignments: true, schedules: true, syllabi: true } } },
   });
   assertNoDependents(_count, {
-    enrollments: 'inscription(s)', assignments: 'affectation(s)', timetables: 'emploi(s) du temps', syllabi: 'syllabus',
+    enrollments: 'inscription(s)', assignments: 'affectation(s)', schedules: 'emploi(s) du temps', syllabi: 'syllabus',
   });
   await prisma.academicYear.delete({ where: { id } });
 }

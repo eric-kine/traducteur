@@ -15,6 +15,7 @@ import { useAcademicYears, useCurrentYear } from '../academic-years/academic-yea
 import { useAssignments, useDeleteAssignment, useDeleteTeacher, useTeacher, useTeacherService } from './teachers.api';
 import { TeacherFormDialog } from './TeacherFormDialog';
 import { AssignmentDialog } from './AssignmentDialog';
+import { TeacherAvailabilityCard } from './TeacherAvailabilityCard';
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
@@ -134,6 +135,8 @@ export function TeacherDetailPage() {
           </Table>
         )}
       </Card>
+
+      <TeacherAvailabilityCard teacher={t} />
 
       <TeacherFormDialog open={editOpen} teacher={t} onClose={() => setEditOpen(false)} />
       <AssignmentDialog open={form.open} assignment={form.assignment} teacherId={t.id} academicYearId={yearId} yearLabel={yearLabel} onClose={() => setForm({ open: false })} />

@@ -189,6 +189,7 @@ model Institute {
   schools       School[]
   academicYears AcademicYear[]
   rooms         Room[]
+  timeslots     Timeslot[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -210,9 +211,10 @@ model AcademicYear {
 
   assignments  TeachingAssignment[]
   enrollments  Enrollment[]
-  timetables   Timetable[]
   syllabi      Syllabus[]
   certificates Certificate[]
+  schedules    Schedule[]
+  sessions     ScheduleSession[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -263,7 +265,7 @@ model Specialty {
 
   teachingUnits TeachingUnit[] // UE propres à cette spécialité
   enrollments   Enrollment[]
-  timetables    Timetable[]
+  sessions      ScheduleSession[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -287,7 +289,7 @@ model Level {
 
   teachingUnits TeachingUnit[]
   enrollments   Enrollment[]
-  timetables    Timetable[]
+  schedules     Schedule[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -344,10 +346,10 @@ model TeachingUnit {
   specialtyId String?
   specialty   Specialty? @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
 
-  assignments    TeachingAssignment[]
-  grades         Grade[]
-  syllabi        Syllabus[]
-  timetableSlots TimetableSlot[]
+  assignments TeachingAssignment[]
+  grades      Grade[]
+  syllabi     Syllabus[]
+  sessions    ScheduleSession[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -418,15 +420,15 @@ model Teacher {
   hourlyRate     Decimal?      @db.Decimal(10, 2) // taux horaire (vacataires)
   isActive       Boolean       @default(true)
 
-  /// Disponibilités hebdomadaires, utilisées par le générateur d'emploi du temps.
-  /// Format : [{ "day": "LUNDI", "start": "08:00", "end": "12:00" }, …]
-  availability Json?
+  /// Créneaux où l'enseignant n'est PAS disponible (vide = toujours disponible),
+  /// utilisés par le générateur d'emploi du temps : [{ "day": "LUNDI", "start": "08:00" }, …]
+  unavailability Json?
 
   userId String? @unique
   user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  assignments    TeachingAssignment[]
-  timetableSlots TimetableSlot[]
+  assignments TeachingAssignment[]
+  sessions    ScheduleSession[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -592,16 +594,18 @@ model Room {
   id             String        @id @default(uuid())
   code           String        @unique // ex. "A101"
   name           String?
-  capacity       Int
-  /// Types de séances accueillies : une salle de TP a des postes / du matériel
+  capacity       Int // nombre de places
+  /// Types de séances accueillies (une salle de TP a des postes / du matériel)
   supportedTypes SessionType[] @default([CM, TD])
   building       String?
   isActive       Boolean       @default(true)
+  /// Créneaux où la salle est indisponible : [{ "day": "LUNDI", "start": "08:00" }, …]
+  unavailability Json?
 
   instituteId String
   institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Restrict)
 
-  timetableSlots TimetableSlot[]
+  sessions ScheduleSession[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -609,16 +613,36 @@ model Room {
   @@map("rooms")
 }
 
-/// Emploi du temps d'une "classe" = (année, niveau, spécialité, semestre).
-/// Généré automatiquement (algorithme de contraintes) puis ajustable à la main.
-model Timetable {
+/// Grille horaire de la semaine (identique pour tous les jours ouvrés, LUNDI → SAMEDI).
+/// Par défaut : 08:00-10:00, 10:00-12:00, 14:00-16:00, 16:00-18:00.
+model Timeslot {
+  id        String @id @default(uuid())
+  order     Int // ordre d'affichage (1, 2, 3…)
+  startTime String // "08:00" (HH:mm)
+  endTime   String // "10:00"
+
+  instituteId String
+  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Restrict)
+
+  sessions ScheduleSession[]
+
+  @@unique([instituteId, order])
+  @@unique([instituteId, startTime])
+  @@map("timeslots")
+}
+
+/// Emploi du temps hebdomadaire d'un NIVEAU pour un semestre d'une année.
+/// Il regroupe le tronc commun et toutes les spécialités du niveau : chaque séance
+/// a un « public » (audienceSpecialtyId) ; deux séances se gênent si elles visent le
+/// même public ou si l'une d'elles est en tronc commun (null).
+/// Généré par l'algorithme (backend/src/modules/schedules/scheduler.ts) puis ajustable à la main.
+model Schedule {
   id               String            @id @default(uuid())
   semester         Int
   status           PublicationStatus @default(BROUILLON)
-  /// Semaine type de validité
-  validFrom        DateTime?         @db.Date
-  validTo          DateTime?         @db.Date
-  /// Rapport du générateur : conflits non résolus, heures non placées…
+  /// Nombre de semaines d'enseignement du semestre : séances hebdo = volume / (semaines × durée)
+  weeks            Int               @default(14)
+  /// Rapport du générateur : séances placées / non placées et raisons, avertissements
   generationReport Json?
   generatedAt      DateTime?
 
@@ -628,36 +652,40 @@ model Timetable {
   levelId String
   level   Level  @relation(fields: [levelId], references: [id], onDelete: Restrict)
 
-  specialtyId String?
-  specialty   Specialty? @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
-
-  slots TimetableSlot[]
+  sessions ScheduleSession[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([academicYearId, levelId, specialtyId, semester])
-  @@map("timetables")
+  @@unique([academicYearId, levelId, semester])
+  @@map("schedules")
 }
 
-/// Créneau hebdomadaire d'un emploi du temps.
-/// Contraintes vérifiées par le générateur / le service :
-///  - un enseignant n'est pas dans deux créneaux qui se chevauchent
-///  - une salle n'accueille pas deux créneaux qui se chevauchent
-///  - la salle supporte le type de séance et a une capacité suffisante
-model TimetableSlot {
+/// Séance hebdomadaire placée dans la grille (jour × créneau).
+/// academicYearId et semester sont recopiés depuis Schedule pour que la BASE
+/// interdise elle-même les doubles réservations (contraintes d'unicité ci-dessous).
+model ScheduleSession {
   id          String      @id @default(uuid())
   day         Weekday
-  startTime   String // "08:00" (HH:mm) — simple à manipuler pour l'algorithme
-  endTime     String // "10:00"
   sessionType SessionType
-  groupLabel  String? // "G1", "G2" pour les TD/TP dédoublés
+  locked      Boolean     @default(false) // épinglée à la main : conservée lors d'une régénération
+  semester    Int
 
-  timetableId String
-  timetable   Timetable @relation(fields: [timetableId], references: [id], onDelete: Cascade)
+  scheduleId String
+  schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+
+  timeslotId String
+  timeslot   Timeslot @relation(fields: [timeslotId], references: [id], onDelete: Restrict)
 
   teachingUnitId String
   teachingUnit   TeachingUnit @relation(fields: [teachingUnitId], references: [id], onDelete: Restrict)
+
+  /// Public : null = tout le niveau (tronc commun), sinon une spécialité
+  audienceSpecialtyId String?
+  audienceSpecialty   Specialty? @relation(fields: [audienceSpecialtyId], references: [id], onDelete: Restrict)
 
   teacherId String?
   teacher   Teacher? @relation(fields: [teacherId], references: [id], onDelete: SetNull)
@@ -668,10 +696,12 @@ model TimetableSlot {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([timetableId])
-  @@index([teacherId, day])
-  @@index([roomId, day])
-  @@map("timetable_slots")
+  /// Un enseignant / une salle ne peut pas être à deux endroits au même moment
+  /// (PostgreSQL : les valeurs NULL ne se gênent pas entre elles)
+  @@unique([teacherId, academicYearId, semester, day, timeslotId])
+  @@unique([roomId, academicYearId, semester, day, timeslotId])
+  @@index([scheduleId])
+  @@map("schedule_sessions")
 }
 
 // =============================================================================

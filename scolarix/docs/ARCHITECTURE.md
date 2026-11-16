@@ -254,5 +254,5 @@ User ──▶ School (0..1)  // périmètre d'un agent SCOLARITE
 | **4** | Notes & relevés de notes (PDF) | ✅ saisie CC/Examen/TP, rattrapage, moyennes, mention, décision, délibération, relevé PDF — [`MODULE-04-NOTES.md`](MODULE-04-NOTES.md) |
 | **5** | Certificats de scolarité (PDF) | ✅ numérotation par année, QR code, vérification publique, historique, duplicata, annulation — [`MODULE-05-CERTIFICATS.md`](MODULE-05-CERTIFICATS.md) |
 | **6** | Syllabus | ✅ éditeur des champs complémentaires, PDF par UE, ZIP par niveau — [`MODULE-06-SYLLABUS.md`](MODULE-06-SYLLABUS.md) |
-| **7** | Emplois du temps | Salles, algorithme de contraintes, ajustement manuel, vues classe/enseignant/salle, export PDF |
+| **7** | Emplois du temps | ✅ salles, créneaux, disponibilités, génération glouton + retour arrière, glisser-déposer, vues niveau/enseignant/salle, PDF — [`MODULE-07-EDT.md`](MODULE-07-EDT.md) |
 | **8** | Comptes & tableaux de bord | Comptes étudiant/enseignant liés (espace enseignant : saisie de ses notes ; espace étudiant : ses relevés), statistiques, journal d'audit, déploiement |

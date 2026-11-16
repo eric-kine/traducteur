@@ -209,6 +209,7 @@ export interface TeacherDto {
   status: import('./enums').TeacherStatus;
   hourlyRate: number | null;
   isActive: boolean;
+  unavailability: { day: import('./schemas/schedule.schema').Weekday; start: string }[];
   createdAt: string;
 }
 
@@ -398,4 +399,59 @@ export interface SyllabusDto {
     evaluationMethods: string | null;
     bibliography: string | null;
   };
+}
+
+export interface RoomDto {
+  id: string; code: string; name: string | null; building: string | null; capacity: number;
+  supportedTypes: import('./enums').SessionType[]; isActive: boolean;
+  unavailability: import('./schemas/schedule.schema').Unavailability;
+}
+export interface TimeslotDto { id: string; order: number; startTime: string; endTime: string }
+
+export interface SessionView {
+  id: string;
+  scheduleId: string;
+  day: import('./schemas/schedule.schema').Weekday;
+  timeslotId: string;
+  sessionType: import('./enums').SessionType;
+  locked: boolean;
+  teachingUnit: { id: string; code: string; title: string };
+  teacher: { id: string; name: string } | null;
+  room: { id: string; code: string; capacity: number } | null;
+  audience: { id: string; code: string } | null; // null = tronc commun
+  level: { id: string; code: string; name: string };
+  school: { code: string };
+}
+
+export interface ScheduleReport {
+  strategy: 'backtracking' | 'glouton';
+  steps: number;
+  total: number;
+  placed: number;
+  unplaced: { teachingUnit: string; sessionType: string; teacher: string | null; audience: string | null; reason: string }[];
+  warnings: string[];
+  coverage: { teachingUnit: string; sessionType: string; quotaHours: number; weeklySessions: number; plannedHours: number }[];
+}
+
+export interface ScheduleDto {
+  id: string;
+  semester: number;
+  weeks: number;
+  status: 'BROUILLON' | 'PUBLIE' | 'ARCHIVE';
+  generatedAt: string | null;
+  report: ScheduleReport | null;
+  academicYear: { id: string; label: string };
+  level: { id: string; code: string; name: string; schoolId: string };
+  canEdit: boolean;
+}
+
+/** Grille hebdomadaire prête à afficher (niveau, enseignant ou salle). */
+export interface TimetableView {
+  kind: 'level' | 'teacher' | 'room';
+  title: string;
+  subtitle: string;
+  days: import('./schemas/schedule.schema').Weekday[];
+  slots: TimeslotDto[];
+  sessions: SessionView[];
+  schedule?: ScheduleDto | null;
 }

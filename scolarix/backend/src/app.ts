@@ -19,6 +19,8 @@ import { assignmentsRouter, coverageRouter } from './modules/assignments/assignm
 import { gradesRouter } from './modules/grades/grades.routes';
 import { certificatesRouter, publicVerifyRouter } from './modules/certificates/certificates.routes';
 import { syllabiRouter } from './modules/syllabi/syllabi.routes';
+import { roomsRouter } from './modules/rooms/rooms.routes';
+import { schedulesRouter, sessionsRouter, timeslotsRouter, timetablesRouter } from './modules/schedules/schedules.routes';
 import { errorHandler, notFoundHandler } from './common/middlewares/error-handler';
 
 export function createApp() {
@@ -57,6 +59,11 @@ export function createApp() {
   app.use('/api/enrollments', enrollmentsRouter);
   app.use('/api/teachers', teachersRouter);
   app.use('/api/assignments', assignmentsRouter);
+  app.use('/api/rooms', roomsRouter);
+  app.use('/api/timeslots', timeslotsRouter);
+  app.use('/api/schedules', schedulesRouter);
+  app.use('/api/schedule-sessions', sessionsRouter);
+  app.use('/api/timetables', timetablesRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

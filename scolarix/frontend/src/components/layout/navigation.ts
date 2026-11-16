@@ -1,4 +1,4 @@
-import { Building2, FileBadge, GraduationCap, Home, KeyRound, UserSquare2, Users, type LucideIcon } from 'lucide-react';
+import { Building2, CalendarRange, FileBadge, GraduationCap, Home, KeyRound, UserSquare2, Users, type LucideIcon } from 'lucide-react';
 import type { Role } from '@scolarix/shared';
 
 export interface NavItem {
@@ -14,6 +14,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Accueil', icon: Home },
   { to: '/students', label: 'Étudiants', icon: GraduationCap, roles: ['ADMIN', 'SCOLARITE'] },
   { to: '/teachers', label: 'Enseignants', icon: UserSquare2, roles: ['ADMIN', 'SCOLARITE'] },
+  { to: '/timetables', label: 'Emplois du temps', icon: CalendarRange, roles: ['ADMIN', 'SCOLARITE'] },
   { to: '/certificates', label: 'Certificats', icon: FileBadge, roles: ['ADMIN', 'SCOLARITE'] },
   { to: '/admin', label: 'Administration', icon: Building2, roles: ['ADMIN', 'SCOLARITE'] },
   { to: '/users', label: 'Utilisateurs', icon: Users, roles: ['ADMIN'] },

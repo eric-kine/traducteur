@@ -16,3 +16,4 @@ export * from './calc/grades';
 export * from './schemas/grade.schema';
 export * from './schemas/certificate.schema';
 export * from './schemas/syllabus.schema';
+export * from './schemas/schedule.schema';

@@ -107,9 +107,9 @@ export async function remove(user: AuthUser, id: string) {
   assertCanManageSchool(user, current.schoolId);
   const { _count } = await prisma.level.findUniqueOrThrow({
     where: { id },
-    select: { _count: { select: { teachingUnits: true, enrollments: true, timetables: true } } },
+    select: { _count: { select: { teachingUnits: true, enrollments: true, schedules: true } } },
   });
-  assertNoDependents(_count, { teachingUnits: 'UE', enrollments: 'inscription(s)', timetables: 'emploi(s) du temps' });
+  assertNoDependents(_count, { teachingUnits: 'UE', enrollments: 'inscription(s)', schedules: 'emploi(s) du temps' });
 
   await prisma.$transaction(async (tx) => {
     await tx.level.delete({ where: { id } });

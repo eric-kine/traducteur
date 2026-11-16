@@ -217,13 +217,13 @@ export async function remove(user: AuthUser, id: string) {
   assertCanManageSchool(user, current.level.schoolId);
   const { _count } = await prisma.teachingUnit.findUniqueOrThrow({
     where: { id },
-    select: { _count: { select: { grades: true, assignments: true, syllabi: true, timetableSlots: true } } },
+    select: { _count: { select: { grades: true, assignments: true, syllabi: true, sessions: true } } },
   });
   assertNoDependents(_count, {
     grades: 'note(s)',
     assignments: 'affectation(s) d’enseignant',
     syllabi: 'syllabus',
-    timetableSlots: 'créneau(x) d’emploi du temps',
+    sessions: 'séance(s) d’emploi du temps',
   });
   await prisma.teachingUnit.delete({ where: { id } });
 }

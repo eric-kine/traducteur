@@ -19,6 +19,7 @@ export const toDto = (t: Teacher) => ({
   status: t.status,
   hourlyRate: t.hourlyRate ? t.hourlyRate.toNumber() : null,
   isActive: t.isActive,
+  unavailability: (t.unavailability as { day: string; start: string }[] | null) ?? [],
   createdAt: t.createdAt.toISOString(),
 });
 
@@ -67,9 +68,9 @@ export async function remove(id: string) {
   await findOrFail(id);
   const { _count } = await prisma.teacher.findUniqueOrThrow({
     where: { id },
-    select: { _count: { select: { assignments: true, timetableSlots: true } } },
+    select: { _count: { select: { assignments: true, sessions: true } } },
   });
-  assertNoDependents(_count, { assignments: 'affectation(s)', timetableSlots: 'créneau(x)' });
+  assertNoDependents(_count, { assignments: 'affectation(s)', sessions: 'séance(s) d’emploi du temps' });
   await prisma.teacher.delete({ where: { id } });
 }
 
