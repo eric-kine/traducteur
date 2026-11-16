@@ -13,7 +13,8 @@
     "db:studio": "prisma studio",
     "test": "vitest run",
     "test:watch": "vitest",
-    "preview:documents": "tsx scripts/preview-documents.ts"
+    "preview:documents": "tsx scripts/preview-documents.ts",
+    "db:seed:demo": "tsx --env-file=.env scripts/seed-demo.ts"
   },
   "prisma": {
     "seed": "tsx --env-file=.env prisma/seed.ts"

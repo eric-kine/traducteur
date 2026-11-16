@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ApiError } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useAcademicYears, useCurrentYear } from '../academic-years/academic-years.api';
+import { useAuth } from '@/stores/auth.store';
 import { useGradeSheet, useSaveGradeSheet, type Session } from './grades.api';
 
 interface Draft { cc: string; exam: string; tp: string; abs: boolean }
@@ -35,6 +36,7 @@ export function GradeSheetPage() {
   const save = useSaveGradeSheet(unitId);
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [dirty, setDirty] = useState(false);
+  const isTeacher = useAuth((st) => st.user?.role === 'ENSEIGNANT');
 
   useEffect(() => {
     if (sheet) { setDrafts(Object.fromEntries(sheet.rows.map((r) => [r.enrollmentId, toDraft(r)]))); setDirty(false); }
@@ -88,8 +90,8 @@ export function GradeSheetPage() {
   return (
     <div className="space-y-6">
       {u && (
-        <Link to={`/admin/levels/${u.levelId}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Maquette du niveau
+        <Link to={isTeacher ? '/' : `/admin/levels/${u.levelId}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="h-4 w-4" /> {isTeacher ? 'Mon espace' : 'Maquette du niveau'}
         </Link>
       )}
       <div className="flex flex-wrap items-end justify-between gap-4">

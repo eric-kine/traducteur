@@ -455,3 +455,55 @@ export interface TimetableView {
   sessions: SessionView[];
   schedule?: ScheduleDto | null;
 }
+
+export interface AccountResult {
+  user: UserDto;
+  /** Mot de passe provisoire : affiché UNE seule fois, à communiquer à la personne */
+  temporaryPassword: string | null;
+  linkedExisting: boolean;
+}
+
+export interface DashboardAlert {
+  key: string;
+  severity: 'warning' | 'info';
+  title: string;
+  count: number;
+  items: string[];
+  link?: string;
+}
+
+export interface DashboardDto {
+  academicYear: { id: string; label: string } | null;
+  scope: string | null; // code de l'école pour un agent de scolarité
+  kpis: { schools: number; levels: number; students: number; teachers: number; teachingUnits: number; enrollments: number; certificates30d: number; transcripts30d: number; users: number };
+  bySchool: { code: string; name: string; students: number; enrollments: number; levels: number; teachingUnits: number }[];
+  byLevel: { school: string; level: string; enrollments: number }[];
+  alerts: DashboardAlert[];
+}
+
+/** Espace étudiant */
+export interface MyStudentSpace {
+  student: StudentDto;
+  enrollments: (EnrollmentDto & { deliberated: boolean })[];
+}
+
+/** Espace enseignant */
+export interface MyTeacherSpace {
+  teacher: TeacherDto;
+  academicYear: { id: string; label: string } | null;
+  courses: {
+    teachingUnit: { id: string; code: string; title: string; semester: number; credits: number; level: { id: string; code: string; name: string }; school: { code: string }; specialty: string | null };
+    sessionTypes: import('./enums').SessionType[];
+    assignedHours: number;
+    completedHours: number;
+    isCoordinator: boolean;
+    students: number;
+    gradesEntered: number;
+  }[];
+  service: TeacherServiceSummary | null;
+}
+
+export interface MyCourseStudents {
+  teachingUnit: { id: string; code: string; title: string };
+  students: { matricule: string; firstName: string; lastName: string; specialty: string | null; email: string | null }[];
+}

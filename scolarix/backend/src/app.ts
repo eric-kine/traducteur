@@ -21,6 +21,9 @@ import { certificatesRouter, publicVerifyRouter } from './modules/certificates/c
 import { syllabiRouter } from './modules/syllabi/syllabi.routes';
 import { roomsRouter } from './modules/rooms/rooms.routes';
 import { schedulesRouter, sessionsRouter, timeslotsRouter, timetablesRouter } from './modules/schedules/schedules.routes';
+import { accountsRouter } from './modules/accounts/accounts.routes';
+import { meRouter } from './modules/me/me.routes';
+import { dashboardRouter } from './modules/dashboard/dashboard.routes';
 import { errorHandler, notFoundHandler } from './common/middlewares/error-handler';
 
 export function createApp() {
@@ -44,6 +47,9 @@ export function createApp() {
   app.use('/api', gradesRouter);
   app.use('/api', certificatesRouter);
   app.use('/api', syllabiRouter);
+  app.use('/api', accountsRouter);
+  app.use('/api/me', meRouter);
+  app.use('/api/dashboard', dashboardRouter);
   app.use('/api/users', usersRouter);
   app.use('/api/institute', instituteRouter);
   app.use('/api/schools/:schoolId/specialties', schoolSpecialtiesRouter);

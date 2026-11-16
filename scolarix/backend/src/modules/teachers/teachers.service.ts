@@ -1,6 +1,6 @@
 import type { Prisma, Teacher } from '@prisma/client';
 import type { z } from 'zod';
-import { computePaidHours, round2, type createTeacherSchema, type listTeachersQuerySchema, type TeacherServiceSummary, type updateTeacherSchema } from '@scolarix/shared';
+import { computePaidHours, round2, type Unavailability, type createTeacherSchema, type listTeachersQuerySchema, type TeacherServiceSummary, type updateTeacherSchema } from '@scolarix/shared';
 import { prisma } from '../../config/prisma';
 import { AppError } from '../../common/errors/AppError';
 import { assertNoDependents } from '../../common/utils/dependents';
@@ -19,7 +19,7 @@ export const toDto = (t: Teacher) => ({
   status: t.status,
   hourlyRate: t.hourlyRate ? t.hourlyRate.toNumber() : null,
   isActive: t.isActive,
-  unavailability: (t.unavailability as { day: string; start: string }[] | null) ?? [],
+  unavailability: (t.unavailability as Unavailability | null) ?? [],
   createdAt: t.createdAt.toISOString(),
 });
 

@@ -1,12 +1,12 @@
 import type { CookieOptions, Request, Response } from 'express';
 import type { ChangePasswordInput, LoginInput } from '@scolarix/shared';
-import { isProduction } from '../../config/env';
+import { cookieSecure } from '../../config/env';
 import * as authService from './auth.service';
 import { REFRESH_COOKIE } from './tokens';
 
 const cookieOptions = (expires?: Date): CookieOptions => ({
   httpOnly: true, // illisible par le JavaScript du navigateur
-  secure: isProduction, // HTTPS uniquement en production
+  secure: cookieSecure, // HTTPS uniquement (en production)
   sameSite: 'strict',
   path: '/api/auth', // envoyé seulement aux routes d'authentification
   ...(expires && { expires }),

@@ -204,6 +204,8 @@ export async function generate(user: AuthUser, input: z.output<typeof generateSc
 
 // ═══════════════════════════ Vues (grilles) ═══════════════════════════
 
+export { sessionInclude, toView };
+
 export async function levelView(user: AuthUser, scheduleId: string): Promise<TimetableView> {
   const schedule = await scheduleDto(user, scheduleId);
   const sessions = await prisma.scheduleSession.findMany({ where: { scheduleId }, include: sessionInclude });
@@ -223,10 +225,10 @@ export async function findSchedule(user: AuthUser, levelId: string, academicYear
   return s ? levelView(user, s.id) : null;
 }
 
-export async function teacherView(teacherId: string, academicYearId: string, semester: number): Promise<TimetableView> {
+export async function teacherView(teacherId: string, academicYearId: string, semester: number, publishedOnly = false): Promise<TimetableView> {
   const [t, y] = await Promise.all([prisma.teacher.findUnique({ where: { id: teacherId } }), prisma.academicYear.findUnique({ where: { id: academicYearId } })]);
   if (!t || !y) throw AppError.notFound('Enseignant ou année introuvable');
-  const sessions = await prisma.scheduleSession.findMany({ where: { teacherId, academicYearId, semester }, include: sessionInclude });
+  const sessions = await prisma.scheduleSession.findMany({ where: { teacherId, academicYearId, semester, ...(publishedOnly && { schedule: { status: 'PUBLIE' } }) }, include: sessionInclude });
   return {
     kind: 'teacher', title: `${t.title ? t.title + ' ' : ''}${t.firstName} ${t.lastName.toUpperCase()}`,
     subtitle: `Semestre ${semester} · ${y.label}`, days: [...WEEKDAYS], slots: await getTimeslots(), sessions: sessions.map(toView),

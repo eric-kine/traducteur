@@ -13,6 +13,8 @@ import { useAuth } from '@/stores/auth.store';
 import { useUpdateUser, useUsers, type UsersFilters } from './users.api';
 import { UserFormDialog } from './UserFormDialog';
 import { ResetPasswordDialog } from './ResetPasswordDialog';
+import { PermissionsMatrix } from './PermissionsMatrix';
+import { Tabs } from '@/components/ui/tabs';
 
 const ROLE_BADGE: Record<Role, 'default' | 'secondary' | 'success' | 'muted'> = {
   ADMIN: 'default',
@@ -30,6 +32,7 @@ export function UsersPage() {
   const [resetting, setResetting] = useState<UserDto | null>(null);
   const { data, isLoading, isError } = useUsers(filters);
   const updateUser = useUpdateUser();
+  const [tab, setTab] = useState<'users' | 'roles'>('users');
 
   // Recherche déclenchée 300 ms après la dernière frappe
   useEffect(() => {
@@ -60,6 +63,8 @@ export function UsersPage() {
         </Button>
       </div>
 
+      <Tabs<'users' | 'roles'> value={tab} onChange={setTab} items={[{ value: 'users', label: 'Comptes' }, { value: 'roles', label: 'Rôles et permissions' }]} />
+      {tab === 'roles' ? <PermissionsMatrix /> : <>
       <Card className="p-4">
         <div className="grid gap-3 sm:grid-cols-[1fr_200px_200px]">
           <div className="relative">
@@ -162,6 +167,7 @@ export function UsersPage() {
         )}
       </Card>
 
+      </>}
       <UserFormDialog open={formOpen} onOpenChange={setFormOpen} user={editing} />
       <ResetPasswordDialog user={resetting} onClose={() => setResetting(null)} />
     </div>

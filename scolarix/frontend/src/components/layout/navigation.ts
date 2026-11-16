@@ -11,7 +11,8 @@ export interface NavItem {
 
 /** Menu latéral. Chaque nouveau module ajoutera ses entrées ici. */
 export const NAV_ITEMS: NavItem[] = [
-  { to: '/', label: 'Accueil', icon: Home },
+  { to: '/', label: 'Tableau de bord', icon: Home, roles: ['ADMIN', 'SCOLARITE'] },
+  { to: '/', label: 'Mon espace', icon: Home, roles: ['ENSEIGNANT', 'ETUDIANT'] },
   { to: '/students', label: 'Étudiants', icon: GraduationCap, roles: ['ADMIN', 'SCOLARITE'] },
   { to: '/teachers', label: 'Enseignants', icon: UserSquare2, roles: ['ADMIN', 'SCOLARITE'] },
   { to: '/timetables', label: 'Emplois du temps', icon: CalendarRange, roles: ['ADMIN', 'SCOLARITE'] },

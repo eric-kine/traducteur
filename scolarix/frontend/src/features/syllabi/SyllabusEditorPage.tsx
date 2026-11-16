@@ -16,6 +16,7 @@ import { ApiError } from '@/lib/api';
 import { applyApiErrors } from '@/lib/form-errors';
 import { cn, formatDateTime } from '@/lib/utils';
 import { useAcademicYears, useCurrentYear } from '../academic-years/academic-years.api';
+import { useAuth } from '@/stores/auth.store';
 import { openSyllabus, useSaveSyllabus, useSyllabus } from './syllabi.api';
 
 /** Valeurs du formulaire : les champs vides sont pré-remplis avec le texte de l'UE. */
@@ -39,6 +40,7 @@ export function SyllabusEditorPage() {
   const year = params.get('year') ?? current?.label ?? '';
   const { data: s, error } = useSyllabus(unitId, year);
   const save = useSaveSyllabus(unitId);
+  const isTeacher = useAuth((st) => st.user?.role === 'ENSEIGNANT');
   const form = useForm<SaveSyllabusInput>({ resolver: zodResolver(saveSyllabusSchema) });
   const { register, handleSubmit, reset, control, watch, setError, formState: { errors, isSubmitting, isDirty } } = form;
   const chapters = useFieldArray({ control, name: 'content' });
@@ -75,8 +77,8 @@ export function SyllabusEditorPage() {
 
   return (
     <div className="space-y-6">
-      <Link to={`/admin/levels/${s.level.id}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Maquette {s.level.code}
+      <Link to={isTeacher ? '/' : `/admin/levels/${s.level.id}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="h-4 w-4" /> {isTeacher ? 'Mon espace' : `Maquette ${s.level.code}`}
       </Link>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>

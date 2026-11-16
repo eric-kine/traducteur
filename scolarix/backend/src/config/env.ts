@@ -17,6 +17,8 @@ const envSchema = z.object({
   UPLOAD_DIR: z.string().default('./uploads'),
   /** Adresse publique du site : sert à construire le lien du QR code de vérification. */
   PUBLIC_APP_URL: z.string().url().default('http://localhost:5173'),
+  /** Cookie de session réservé au HTTPS. Par défaut : oui en production. Mettre "false" UNIQUEMENT pour un essai local en HTTP. */
+  COOKIE_SECURE: z.enum(['true', 'false']).optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -30,3 +32,4 @@ if (!parsed.success) {
 
 export const env = parsed.data;
 export const isProduction = env.NODE_ENV === 'production';
+export const cookieSecure = env.COOKIE_SECURE ? env.COOKIE_SECURE === 'true' : isProduction;

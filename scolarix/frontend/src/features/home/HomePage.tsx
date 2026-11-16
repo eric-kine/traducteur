@@ -1,8 +1,10 @@
 import { ROLE_LABELS } from '@scolarix/shared';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/stores/auth.store';
+import { AdminDashboard } from '../dashboard/AdminDashboard';
+import { StudentSpace } from '../me/StudentSpace';
+import { TeacherSpace } from '../me/TeacherSpace';
 
-/** Tableau de bord d'accueil (enrichi au module 12). */
+/** Accueil selon le rôle : tableau de bord (administration, scolarité) ou espace personnel. */
 export function HomePage() {
   const user = useAuth((s) => s.user);
   if (!user) return null;
@@ -10,16 +12,11 @@ export function HomePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Bonjour {user.firstName} 👋</h1>
-        <p className="text-muted-foreground">Bienvenue sur Scolarix — espace {ROLE_LABELS[user.role]}.</p>
+        <p className="text-muted-foreground">
+          {user.role === 'ETUDIANT' ? 'Votre espace étudiant' : user.role === 'ENSEIGNANT' ? 'Votre espace enseignant' : `Tableau de bord — ${ROLE_LABELS[user.role]}`}
+        </p>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Votre espace est prêt</CardTitle>
-          <CardDescription>
-            Les fonctionnalités (écoles, étudiants, notes, documents…) apparaîtront dans le menu au fur et à mesure.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      {user.role === 'ETUDIANT' ? <StudentSpace /> : user.role === 'ENSEIGNANT' ? <TeacherSpace /> : <AdminDashboard />}
     </div>
   );
 }

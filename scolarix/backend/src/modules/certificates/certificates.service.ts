@@ -77,8 +77,16 @@ export async function preview(user: AuthUser, studentId: string, yearLabel: stri
  * exacte des données imprimées, puis génération du PDF.
  */
 export async function issue(user: AuthUser, studentId: string, yearLabel: string, purpose?: string) {
-  const { data, student, enrollment } = await buildData(user, studentId, yearLabel, purpose);
+  const { student } = await buildData(user, studentId, yearLabel, purpose);
   assertCanManageSchool(user, student.schoolId);
+  return issueChecked(user, studentId, yearLabel, purpose);
+}
+
+/** Émission demandée par l'étudiant lui-même (Mon espace) : l'appelant a vérifié que c'est bien sa fiche. */
+export const issueForSelf = (user: AuthUser, studentId: string, yearLabel: string) => issueChecked(user, studentId, yearLabel, 'Demande en ligne de l’étudiant');
+
+async function issueChecked(user: AuthUser, studentId: string, yearLabel: string, purpose?: string) {
+  const { data, enrollment } = await buildData(user, studentId, yearLabel, purpose);
 
   const year = yearLabel.slice(0, 4);
   const cert = await prisma.$transaction(async (tx) => {

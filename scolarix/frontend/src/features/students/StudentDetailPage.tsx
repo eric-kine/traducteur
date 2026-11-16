@@ -15,6 +15,7 @@ import { StudentAvatar } from './StudentAvatar';
 import { StudentFormDialog } from './StudentFormDialog';
 import { EnrollmentDialog } from './EnrollmentDialog';
 import { STATUS_VARIANT } from './StudentsPage';
+import { AccountCard } from '../accounts/AccountCard';
 
 const Info = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <div>
@@ -150,6 +151,8 @@ export function StudentDetailPage() {
           </Table>
         )}
       </Card>
+
+      <AccountCard kind="students" id={s.id} email={s.email} />
 
       <StudentFormDialog open={editOpen} student={s} onClose={() => setEditOpen(false)} />
       <EnrollmentDialog open={enrollForm.open} enrollment={enrollForm.enrollment} studentId={s.id} schoolId={s.school.id} onClose={() => setEnrollForm({ open: false })} />
