@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Syllabus INF101 — Algorithmique et structures de données — 2026-2027</title>
+<style>
+  
+  @page { size: A4; margin: 14mm 12mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "DejaVu Sans", "Liberation Sans", Arial, sans-serif; color: #1f2937; font-size: 9.5pt; margin: 0; }
+  .header { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #1e4fa3; padding-bottom: 8px; }
+  .brand { display: flex; flex-direction: column; align-items: center; width: 70px; font-weight: 700; color: #1e4fa3; font-size: 8pt; }
+  .inst { flex: 1; text-align: center; }
+  .inst h1 { margin: 0; font-size: 13pt; text-transform: uppercase; letter-spacing: .5px; }
+  .inst .school { font-size: 10.5pt; font-weight: 600; margin-top: 2px; }
+  .inst .contact { font-size: 7.5pt; color: #6b7280; margin-top: 2px; }
+  .ref { width: 120px; text-align: right; font-size: 7.5pt; color: #4b5563; }
+  .ref strong { display: block; font-family: "DejaVu Sans Mono", monospace; color: #111827; font-size: 8pt; }
+  .title { text-align: center; margin: 12px 0 8px; }
+  .title h2 { margin: 0; font-size: 15pt; letter-spacing: 2px; color: #1e4fa3; }
+  .title p { margin: 2px 0 0; font-size: 10pt; }
+  .watermark { position: fixed; top: 38%; left: 0; right: 0; text-align: center; font-size: 80pt; font-weight: 700; color: rgba(220, 38, 38, .08); transform: rotate(-28deg); z-index: -1; }
+  table { width: 100%; border-collapse: collapse; }
+  .footer-note { margin-top: 8px; font-size: 7pt; color: #6b7280; }
+
+  @page { margin: 14mm 12mm 18mm; }
+  body { font-size: 9.5pt; line-height: 1.45; }
+  .ue-title { margin: 14px 0 10px; padding: 10px 14px; background: #1e4fa3; color: #fff; border-radius: 6px; }
+  .ue-title .code { font-family: "DejaVu Sans Mono", monospace; font-size: 10pt; opacity: .9; }
+  .ue-title h2 { margin: 2px 0 0; font-size: 15pt; }
+  table.facts { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+  table.facts td { border: 1px solid #d1d5db; padding: 5px 8px; vertical-align: top; }
+  table.facts td.k { width: 22%; background: #f1f5fb; color: #374151; font-weight: 600; }
+  .vol { display: flex; gap: 6px; flex-wrap: wrap; }
+  .vol span { background: #e8eefb; border-radius: 4px; padding: 1px 6px; font-weight: 600; }
+  section { margin-top: 12px; page-break-inside: avoid; }
+  section.long { page-break-inside: auto; }
+  h3 { margin: 0 0 4px; font-size: 10.5pt; color: #1e4fa3; text-transform: uppercase; letter-spacing: .4px; border-bottom: 1px solid #c7d2fe; padding-bottom: 2px; }
+  p { margin: 0 0 4px; }
+  ul { margin: 2px 0 4px 18px; padding: 0; }
+  .empty { color: #9ca3af; font-style: italic; }
+  table.plan { width: 100%; border-collapse: collapse; }
+  table.plan th, table.plan td { border: 1px solid #d1d5db; padding: 4px 6px; text-align: left; vertical-align: top; }
+  table.plan thead th { background: #1e4fa3; color: #fff; font-size: 8.5pt; }
+  table.plan td.c { text-align: center; white-space: nowrap; }
+  table.plan tfoot td { background: #e8eefb; font-weight: 700; }
+  .desc { color: #4b5563; font-size: 8.5pt; }
+  .biblio { margin: 2px 0 0 18px; padding: 0; }
+  .teachers td { border: none; padding: 1px 0; }
+  .status { float: right; font-size: 8pt; color: #b91c1c; border: 1px solid #b91c1c; padding: 0 6px; border-radius: 3px; }
+</style>
+</head>
+<body>
+  <header class="header">
+    <div class="brand"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#1e4fa3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Scolarix"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg><span>Scolarix</span></div>
+    <div class="inst">
+      <h1>Institut Supérieur Polytechnique (ISP)</h1>
+      <div class="school">École d&#39;Ingénieurs et de Technologie</div>
+      <div class="contact">Licence 1 (L1) · Tronc commun · Semestre 1</div>
+    </div>
+    <div class="ref">Année académique<strong>2026-2027</strong></div>
+  </header>
+
+  <div class="ue-title">
+    
+    <div class="code">SYLLABUS · INF101</div>
+    <h2>Algorithmique et structures de données</h2>
+  </div>
+
+  <table class="facts">
+    <tr><td class="k">Code</td><td>INF101</td><td class="k">Crédits ECTS</td><td>6</td></tr>
+    <tr><td class="k">Niveau</td><td>Licence 1</td><td class="k">Coefficient</td><td>3</td></tr>
+    <tr><td class="k">Semestre</td><td>1</td><td class="k">Volume horaire</td><td><div class="vol"><span>CM 30 h</span><span>TD 18 h</span><span>TP 12 h</span><b>= 60 h</b></div></td></tr>
+    <tr>
+      <td class="k">Responsable</td>
+      <td colspan="3">Dr Ousmane FALL — Maître de conférences · o.fall@isp.example</td>
+    </tr>
+    <tr><td class="k">Intervenants</td><td colspan="3"><table class="teachers"><tr><td>M. Ibrahima SOW (TD, TP) · i.sow@isp.example</td></tr></table></td></tr>
+  </table>
+
+  
+  <section><h3>Objectifs pédagogiques</h3><p>Concevoir, analyser et implémenter des algorithmes classiques.</p><ul><li>Raisonner sur la correction d&#39;un algorithme</li><li>Estimer sa complexité</li></ul></section>
+  <section><h3>Compétences visées</h3><ul><li>Concevoir un algorithme efficace</li><li>Choisir une structure de données adaptée</li></ul></section>
+  <section><h3>Prérequis</h3><p>Mathématiques de terminale (suites, logique).</p></section>
+
+  <section class="long">
+    <h3>Contenu détaillé</h3>
+    
+    <table class="plan">
+      <thead><tr><th style="width:5%">#</th><th>Chapitre / séquence</th><th style="width:16%">Type</th><th style="width:10%">Heures</th></tr></thead>
+      <tbody>
+        
+        <tr>
+          <td class="c">1</td>
+          <td><b>Introduction à l&#39;algorithmique</b><div class="desc">Pseudo-code, preuve, invariants</div></td>
+          <td>Cours magistral</td>
+          <td class="c">10 h</td>
+        </tr>
+        <tr>
+          <td class="c">2</td>
+          <td><b>Structures de données linéaires</b><div class="desc">Tableaux, listes, piles, files</div></td>
+          <td>Cours magistral</td>
+          <td class="c">20 h</td>
+        </tr>
+        <tr>
+          <td class="c">3</td>
+          <td><b>Exercices de tri et de recherche</b></td>
+          <td>Travaux dirigés</td>
+          <td class="c">18 h</td>
+        </tr>
+        <tr>
+          <td class="c">4</td>
+          <td><b>Implémentation en Python</b><div class="desc">Projet en binôme</div></td>
+          <td>Travaux pratiques</td>
+          <td class="c">12 h</td>
+        </tr>
+      </tbody>
+      <tfoot><tr><td></td><td colspan="2">Total des séquences (volume de l'UE : 60 h)</td><td class="c">60 h</td></tr></tfoot>
+    </table>
+  </section>
+
+  <section><h3>Méthodes pédagogiques</h3><ul><li>Cours magistraux illustrés</li><li>TD en petits groupes</li><li>Projet de programmation</li></ul></section>
+
+  <section>
+    <h3>Modalités d'évaluation</h3>
+    <ul><li>Note de l&#39;UE = Contrôle continu : 30 % + Examen final : 50 % + Travaux pratiques : 20 %.</li><li>UE validée si la note est au moins 10/20, ou par compensation si la moyenne du semestre est au moins 10/20 et la note au moins 5/20.</li><li>Session de rattrapage : la note d&#39;examen de rattrapage remplace celle de l&#39;examen, le contrôle continu est conservé ; la meilleure des deux notes est retenue.</li></ul>
+    <p>Deux devoirs surveillés et le projet composent le contrôle continu. Examen écrit de 2 h sans document.</p>
+  </section>
+
+  <section><h3>Bibliographie</h3><ol class="biblio"><li>T. Cormen et al., Algorithmique, Dunod</li><li>R. Sedgewick, Algorithmes en Java, Pearson</li></ol></section>
+
+  <p class="footer-note" style="margin-top:14px">Document généré le 21 septembre 2026 par Scolarix · contenu mis à jour le 20 septembre 2026.</p>
+</body>
+</html>

@@ -1,0 +1,796 @@
+// =============================================================================
+//  SCOLARIX — Schéma Prisma (PostgreSQL)
+//  Gestion d'un institut supérieur privé regroupant plusieurs écoles.
+//
+//  Conventions :
+//   - Identifiants : UUID (String @default(uuid()))
+//   - Noms de tables en snake_case via @@map, champs en camelCase côté code
+//   - createdAt / updatedAt sur toutes les entités métier
+//   - Suppression : "Restrict" par défaut pour protéger l'historique
+//     (on ne supprime pas une école qui a des étudiants), "Cascade" seulement
+//     pour les données qui n'ont pas de sens sans leur parent (ex. créneaux
+//     d'un emploi du temps).
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+//  ÉNUMÉRATIONS
+// =============================================================================
+
+/// Rôles applicatifs (contrôle d'accès JWT)
+enum Role {
+  ADMIN // Accès total à l'institut
+  SCOLARITE // Service scolarité : gère étudiants, notes, documents (limité à une école si schoolId renseigné)
+  ENSEIGNANT // Consulte ses UE, saisit ses notes, voit son emploi du temps
+  ETUDIANT // Consulte ses notes, son emploi du temps, télécharge ses documents
+}
+
+/// Cycle d'un niveau (permet de regrouper Niveau 1, Licence, Master…)
+enum LevelCycle {
+  PREPA // Classes préparatoires / Niveau 1-2
+  LICENCE // Bachelor / Licence
+  MASTER // Master / Ingénieur
+  DOCTORAT
+  AUTRE
+}
+
+enum Gender {
+  M
+  F
+}
+
+/// Statut administratif de l'étudiant
+enum StudentStatus {
+  ACTIF
+  SUSPENDU
+  DIPLOME
+  ABANDON
+  EXCLU
+}
+
+/// Statut de l'enseignant (impacte le volume horaire payé)
+enum TeacherStatus {
+  PERMANENT // Salarié de l'institut
+  VACATAIRE // Payé à l'heure
+  INVITE // Intervenant ponctuel
+}
+
+/// Statut d'une inscription annuelle
+enum EnrollmentStatus {
+  EN_ATTENTE // Dossier déposé, frais non réglés
+  INSCRIT // Inscription validée
+  ADMIS // Résultat de fin d'année : passe au niveau supérieur
+  AJOURNE // Redouble
+  ANNULE
+}
+
+/// Session d'examen
+enum ExamSession {
+  NORMALE
+  RATTRAPAGE
+}
+
+/// Type de séance (CM / TD / TP)
+enum SessionType {
+  CM
+  TD
+  TP
+}
+
+enum Weekday {
+  LUNDI
+  MARDI
+  MERCREDI
+  JEUDI
+  VENDREDI
+  SAMEDI
+}
+
+/// Cycle de vie d'un document généré (emploi du temps, syllabus)
+enum PublicationStatus {
+  BROUILLON
+  PUBLIE
+  ARCHIVE
+}
+
+/// Types de documents PDF générés (traçabilité + vérification d'authenticité)
+enum DocumentType {
+  RELEVE_NOTES
+  CERTIFICAT_SCOLARITE
+  SYLLABUS
+  EMPLOI_DU_TEMPS
+}
+
+// =============================================================================
+//  AUTHENTIFICATION
+// =============================================================================
+
+/// Compte de connexion. Un User est lié à AU PLUS un Student ou un Teacher.
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  role         Role
+  firstName    String
+  lastName     String
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+
+  /// Pour un agent SCOLARITE : école qu'il gère (null = toutes les écoles)
+  schoolId String?
+  school   School? @relation("SchoolStaff", fields: [schoolId], references: [id], onDelete: SetNull)
+
+  student Student? // rempli si role = ETUDIANT
+  teacher Teacher? // rempli si role = ENSEIGNANT
+
+  refreshTokens       RefreshToken[]
+  gradesEntered       Grade[]        @relation("GradesEntered")
+  certificatesIssued  Certificate[]  @relation("CertificatesIssued")
+  certificatesRevoked Certificate[]  @relation("CertificatesRevoked")
+  syllabiUpdated      Syllabus[]     @relation("SyllabiUpdated")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role])
+  @@map("users")
+}
+
+/// Jeton de rafraîchissement (session longue, 7 jours par défaut).
+/// - Seul le HASH SHA-256 est stocké : une fuite de la base ne permet pas de se connecter.
+/// - Rotation : chaque utilisation révoque le jeton et en crée un nouveau (replacedById).
+/// - Détection de vol : si un jeton déjà révoqué est réutilisé, toutes les
+///   sessions de l'utilisateur sont révoquées.
+model RefreshToken {
+  id           String    @id @default(uuid())
+  tokenHash    String    @unique
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?
+  userAgent    String?
+  ipAddress    String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// =============================================================================
+//  STRUCTURE ACADÉMIQUE
+// =============================================================================
+
+/// L'institut (une seule ligne en pratique, mais modélisé pour rester propre).
+/// Un seul institut en pratique : géré par GET/PUT /api/institute.
+model Institute {
+  id           String  @id @default(uuid())
+  name         String
+  acronym      String? // ex. "ISP"
+  address      String?
+  city         String? // "Fait à <ville>" sur les documents officiels
+  country      String?
+  phone        String?
+  email        String?
+  website      String?
+  logoUrl      String? // utilisé dans les en-têtes PDF
+  directorName String? // signataire par défaut des certificats
+
+  schools       School[]
+  academicYears AcademicYear[]
+  rooms         Room[]
+  timeslots     Timeslot[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("institutes")
+}
+
+/// Année académique (ex. "2026-2027"). Sert de repère temporel aux
+/// inscriptions, notes, emplois du temps et syllabus.
+model AcademicYear {
+  id        String   @id @default(uuid())
+  label     String // "2026-2027"
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  isCurrent Boolean  @default(false) // une seule année "courante" (contrôlé côté service)
+
+  instituteId String
+  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Restrict)
+
+  assignments  TeachingAssignment[]
+  enrollments  Enrollment[]
+  syllabi      Syllabus[]
+  certificates Certificate[]
+  schedules    Schedule[]
+  sessions     ScheduleSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([instituteId, label])
+  @@map("academic_years")
+}
+
+/// Une école de l'institut (ex. École d'Ingénieurs, École de Commerce).
+model School {
+  id           String  @id @default(uuid())
+  code         String  @unique // ex. "EIT" — majuscules, utilisé dans les matricules
+  name         String
+  description  String?
+  directorName String? // signataire des documents de l'école
+  email        String?
+  phone        String?
+  address      String? // si différente de celle de l'institut
+  logoUrl      String?
+  isActive     Boolean @default(true)
+
+  instituteId String
+  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Restrict)
+
+  specialties Specialty[]
+  levels      Level[]
+  students    Student[]
+  staff       User[]      @relation("SchoolStaff")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("schools")
+}
+
+/// Spécialité / filière d'une école (ex. Génie Logiciel, Réseaux, Finance).
+model Specialty {
+  id           String  @id @default(uuid())
+  code         String // unique au sein de l'école, majuscules (ex. "GL")
+  name         String // ex. "Génie Logiciel"
+  description  String?
+  /// Intitulé officiel du diplôme visé, imprimé sur les relevés
+  diplomaTitle String?
+  isActive     Boolean @default(true)
+
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Restrict)
+
+  teachingUnits TeachingUnit[] // UE propres à cette spécialité
+  enrollments   Enrollment[]
+  sessions      ScheduleSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, code])
+  @@map("specialties")
+}
+
+/// Niveau d'études d'une école (Niveau 1, Niveau 2, Licence 3, Master 1…).
+model Level {
+  id              String     @id @default(uuid())
+  code            String // ex. "L1", "M2"
+  name            String // ex. "Licence 1"
+  cycle           LevelCycle
+  order           Int // ordre de progression (1, 2, 3…) → calcul du niveau suivant
+  /// Crédits requis pour valider le niveau (ex. 60 ECTS)
+  requiredCredits Int        @default(60)
+
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Restrict)
+
+  teachingUnits TeachingUnit[]
+  enrollments   Enrollment[]
+  schedules     Schedule[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, code])
+  @@unique([schoolId, order])
+  @@map("levels")
+}
+
+/// Unité d'Enseignement (UE) rattachée à un niveau (donc indirectement à une école).
+/// - specialtyId = null  → UE "tronc commun" suivie par toutes les spécialités du niveau
+/// - specialtyId renseigné → UE propre à une spécialité (de la même école)
+///
+/// Volumes horaires (en heures, 2 décimales) :
+///   totalHours = cmHours + tdHours + tpHours   → toujours CALCULÉ par le serveur
+///                                                 (+ contrainte CHECK en base)
+///   paidHours  = volume rémunéré. Si paidHoursAuto = true, il est calculé en
+///                "équivalent TD" : CM × 1,5 + TD × 1 + TP × 1 (coefficients
+///                dans packages/shared/src/calc/teaching-unit.ts). Sinon, saisi à la main.
+///   coût estimé = paidHours × hourlyRate (calculé à l'affichage, non stocké)
+model TeachingUnit {
+  id          String  @id @default(uuid())
+  code        String // ex. "INF101" — unique au sein du niveau
+  title       String // intitulé
+  description String?
+  semester    Int // 1 ou 2 (semestre dans l'année du niveau)
+  credits     Int // crédits ECTS
+  coefficient Decimal @default(1) @db.Decimal(4, 2)
+
+  // ---- Quotas horaires (en heures) ----
+  cmHours       Decimal  @default(0) @db.Decimal(6, 2) // Cours magistraux
+  tdHours       Decimal  @default(0) @db.Decimal(6, 2) // Travaux dirigés
+  tpHours       Decimal  @default(0) @db.Decimal(6, 2) // Travaux pratiques
+  totalHours    Decimal  @default(0) @db.Decimal(6, 2) // = CM + TD + TP (calculé)
+  paidHours     Decimal  @default(0) @db.Decimal(6, 2) // Volume horaire payé
+  paidHoursAuto Boolean  @default(true) // true = paidHours recalculé (équivalent TD) à chaque modification
+  hourlyRate    Decimal? @db.Decimal(10, 2) // Taux horaire de rémunération
+
+  // ---- Pondération des notes (somme = 100) ----
+  ccWeight   Int @default(40) // contrôle continu (%)
+  examWeight Int @default(60) // examen final (%)
+  tpWeight   Int @default(0) // note de TP (%)
+
+  // ---- Contenu pédagogique (repris par le générateur de syllabus) ----
+  objectives    String? @db.Text // objectifs pédagogiques
+  prerequisites String? @db.Text // prérequis
+  bibliography  String? @db.Text // références bibliographiques
+
+  isActive Boolean @default(true)
+
+  levelId String
+  level   Level  @relation(fields: [levelId], references: [id], onDelete: Restrict)
+
+  specialtyId String?
+  specialty   Specialty? @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
+
+  assignments TeachingAssignment[]
+  grades      Grade[]
+  syllabi     Syllabus[]
+  sessions    ScheduleSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([levelId, code])
+  @@index([levelId, semester])
+  @@index([specialtyId])
+  @@map("teaching_units")
+}
+
+// =============================================================================
+//  PERSONNES
+// =============================================================================
+
+/// Étudiant, rattaché à UNE école.
+model Student {
+  id          String        @id @default(uuid())
+  matricule   String        @unique // ex. "EIT-2026-00042" (généré par le service)
+  firstName   String
+  lastName    String
+  gender      Gender
+  birthDate   DateTime      @db.Date
+  birthPlace  String
+  nationality String?
+  email       String?
+  phone       String?
+  address     String?
+  /// Nom du fichier photo dans UPLOAD_DIR/students (servi uniquement via l'API authentifiée)
+  photoPath   String?
+  status      StudentStatus @default(ACTIF)
+
+  // Contact d'urgence / tuteur
+  guardianName     String?
+  guardianRelation String? // "Père", "Mère", "Tuteur"…
+  guardianPhone    String?
+  guardianEmail    String?
+
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Restrict)
+
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  enrollments  Enrollment[]
+  documents    GeneratedDocument[]
+  certificates Certificate[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([lastName, firstName])
+  @@map("students")
+}
+
+/// Enseignant. Non rattaché à une école : il peut intervenir dans plusieurs écoles.
+model Teacher {
+  id             String        @id @default(uuid())
+  employeeNumber String        @unique // "ENS-00001" (généré par le service)
+  firstName      String
+  lastName       String
+  title          String? // "Dr", "Pr", "M.", "Mme"
+  grade          String? // grade universitaire (Assistant, Maître de conférences…)
+  specialtyField String? // domaine d'expertise
+  email          String        @unique
+  phone          String?
+  status         TeacherStatus @default(VACATAIRE)
+  hourlyRate     Decimal?      @db.Decimal(10, 2) // taux horaire (vacataires)
+  isActive       Boolean       @default(true)
+
+  /// Créneaux où l'enseignant n'est PAS disponible (vide = toujours disponible),
+  /// utilisés par le générateur d'emploi du temps : [{ "day": "LUNDI", "start": "08:00" }, …]
+  unavailability Json?
+
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  assignments TeachingAssignment[]
+  sessions    ScheduleSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("teachers")
+}
+
+/// Affectation d'un enseignant à une UE pour une année et un type de séance.
+/// Une UE peut avoir un enseignant pour le CM et un autre pour les TD/TP.
+model TeachingAssignment {
+  id             String      @id @default(uuid())
+  sessionType    SessionType
+  /// Heures prévues (confiées) pour ce type de séance — leur somme par UE ne
+  /// peut pas dépasser le quota de l'UE (cmHours / tdHours / tpHours)
+  assignedHours  Decimal     @db.Decimal(6, 2)
+  /// Heures effectivement assurées (mises à jour au fil de l'année, base de paiement)
+  completedHours Decimal     @default(0) @db.Decimal(6, 2)
+  /// Responsable de l'UE (rédige le syllabus, valide les notes)
+  isCoordinator  Boolean     @default(false)
+
+  teacherId String
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+
+  teachingUnitId String
+  teachingUnit   TeachingUnit @relation(fields: [teachingUnitId], references: [id], onDelete: Restrict)
+
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([teacherId, teachingUnitId, academicYearId, sessionType])
+  @@index([teachingUnitId, academicYearId])
+  @@index([teacherId, academicYearId])
+  @@map("teaching_assignments")
+}
+
+// =============================================================================
+//  SCOLARITÉ
+// =============================================================================
+
+/// Inscription annuelle d'un étudiant dans un niveau (+ spécialité) d'une année.
+/// C'est le "pivot" des relevés de notes et des certificats de scolarité.
+model Enrollment {
+  id            String           @id @default(uuid())
+  status        EnrollmentStatus @default(EN_ATTENTE)
+  enrolledAt    DateTime         @default(now())
+  isRepeating   Boolean          @default(false) // redoublant
+  /// Résultats de fin d'année (calculés au module relevés)
+  finalAverage  Decimal?         @db.Decimal(5, 2)
+  creditsEarned Int?
+  decision      String? // ADMIS | ADMIS_AVEC_DETTES | AJOURNE (fixé à la délibération)
+  mention       String? // Très bien, Bien, Assez bien, Passable
+  deliberatedAt DateTime? // date de la délibération (notes verrouillées)
+
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+
+  levelId String
+  level   Level  @relation(fields: [levelId], references: [id], onDelete: Restrict)
+
+  /// Optionnelle : certains niveaux (ex. Niveau 1) sont en tronc commun
+  specialtyId String?
+  specialty   Specialty? @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
+
+  grades       Grade[]
+  documents    GeneratedDocument[]
+  certificates Certificate[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// Un étudiant ne peut avoir qu'une inscription par année
+  @@unique([studentId, academicYearId])
+  @@index([academicYearId, levelId, specialtyId])
+  @@map("enrollments")
+}
+
+/// Note d'un étudiant (via son inscription) dans une UE, pour une session.
+/// Règles de calcul : packages/shared/src/calc/grades.ts et docs/MODULE-04-NOTES.md
+///  - finalScore = (CC × ccWeight + Examen × examWeight + TP × tpWeight) / 100, calculé par le serveur
+///  - en RATTRAPAGE, seule la note d'examen (et de TP) est ressaisie ; le CC de la session normale est conservé
+///  - absent à l'examen (isAbsent) → examen compté 0, affiché "ABS"
+model Grade {
+  id          String      @id @default(uuid())
+  session     ExamSession @default(NORMALE)
+  ccScore     Decimal?    @db.Decimal(4, 2) // /20
+  examScore   Decimal?    @db.Decimal(4, 2) // /20
+  tpScore     Decimal?    @db.Decimal(4, 2) // /20
+  finalScore  Decimal?    @db.Decimal(4, 2) // /20 — calculé (null tant qu'une note requise manque)
+  isAbsent    Boolean     @default(false) // absent à l'examen
+  isValidated Boolean     @default(false) // finalScore >= note de validation (10)
+  isLocked    Boolean     @default(false) // verrouillée après délibération
+  comment     String?
+
+  enrollmentId String
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
+
+  teachingUnitId String
+  teachingUnit   TeachingUnit @relation(fields: [teachingUnitId], references: [id], onDelete: Restrict)
+
+  /// Utilisateur ayant saisi ou modifié la note en dernier (traçabilité)
+  enteredByUserId String?
+  enteredBy       User?   @relation("GradesEntered", fields: [enteredByUserId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([enrollmentId, teachingUnitId, session])
+  @@index([teachingUnitId])
+  @@map("grades")
+}
+
+// =============================================================================
+//  PÉDAGOGIE : SYLLABUS
+// =============================================================================
+
+/// Syllabus d'une UE pour une année académique : les « champs complémentaires »
+/// rédigés par le responsable de l'UE. Le PDF est généré à la demande en combinant :
+///  - les données de l'UE (code, intitulé, crédits, volumes CM/TD/TP, pondérations) ;
+///  - les enseignants affectés (le responsable = affectation isCoordinator) ;
+///  - les champs ci-dessous. objectives / prerequisites / bibliography sont pré-remplis
+///    depuis l'UE ; s'ils restent vides (null), le texte de l'UE est utilisé.
+model Syllabus {
+  id                String            @id @default(uuid())
+  status            PublicationStatus @default(BROUILLON)
+  objectives        String? // objectifs pédagogiques (null → ceux de l'UE)
+  competencies      String? // compétences visées
+  prerequisites     String? // (null → ceux de l'UE)
+  /// Contenu détaillé : [{ "title": "Introduction", "sessionType": "CM", "hours": 4, "description": "…" }, …]
+  content           Json?
+  teachingMethods   String? // méthodes pédagogiques
+  evaluationMethods String? // précisions sur l'évaluation (en plus du texte généré depuis les pondérations)
+  bibliography      String? // (null → celle de l'UE)
+  generatedAt       DateTime? // dernière génération PDF
+
+  teachingUnitId String
+  teachingUnit   TeachingUnit @relation(fields: [teachingUnitId], references: [id], onDelete: Restrict)
+
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+
+  updatedById String?
+  updatedBy   User?   @relation("SyllabiUpdated", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([teachingUnitId, academicYearId])
+  @@map("syllabi")
+}
+
+// =============================================================================
+//  EMPLOI DU TEMPS
+// =============================================================================
+
+/// Salle de cours (ressource partagée entre les écoles de l'institut)
+model Room {
+  id             String        @id @default(uuid())
+  code           String        @unique // ex. "A101"
+  name           String?
+  capacity       Int // nombre de places
+  /// Types de séances accueillies (une salle de TP a des postes / du matériel)
+  supportedTypes SessionType[] @default([CM, TD])
+  building       String?
+  isActive       Boolean       @default(true)
+  /// Créneaux où la salle est indisponible : [{ "day": "LUNDI", "start": "08:00" }, …]
+  unavailability Json?
+
+  instituteId String
+  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Restrict)
+
+  sessions ScheduleSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("rooms")
+}
+
+/// Grille horaire de la semaine (identique pour tous les jours ouvrés, LUNDI → SAMEDI).
+/// Par défaut : 08:00-10:00, 10:00-12:00, 14:00-16:00, 16:00-18:00.
+model Timeslot {
+  id        String @id @default(uuid())
+  order     Int // ordre d'affichage (1, 2, 3…)
+  startTime String // "08:00" (HH:mm)
+  endTime   String // "10:00"
+
+  instituteId String
+  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Restrict)
+
+  sessions ScheduleSession[]
+
+  @@unique([instituteId, order])
+  @@unique([instituteId, startTime])
+  @@map("timeslots")
+}
+
+/// Emploi du temps hebdomadaire d'un NIVEAU pour un semestre d'une année.
+/// Il regroupe le tronc commun et toutes les spécialités du niveau : chaque séance
+/// a un « public » (audienceSpecialtyId) ; deux séances se gênent si elles visent le
+/// même public ou si l'une d'elles est en tronc commun (null).
+/// Généré par l'algorithme (backend/src/modules/schedules/scheduler.ts) puis ajustable à la main.
+model Schedule {
+  id               String            @id @default(uuid())
+  semester         Int
+  status           PublicationStatus @default(BROUILLON)
+  /// Nombre de semaines d'enseignement du semestre : séances hebdo = volume / (semaines × durée)
+  weeks            Int               @default(14)
+  /// Rapport du générateur : séances placées / non placées et raisons, avertissements
+  generationReport Json?
+  generatedAt      DateTime?
+
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+
+  levelId String
+  level   Level  @relation(fields: [levelId], references: [id], onDelete: Restrict)
+
+  sessions ScheduleSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([academicYearId, levelId, semester])
+  @@map("schedules")
+}
+
+/// Séance hebdomadaire placée dans la grille (jour × créneau).
+/// academicYearId et semester sont recopiés depuis Schedule pour que la BASE
+/// interdise elle-même les doubles réservations (contraintes d'unicité ci-dessous).
+model ScheduleSession {
+  id          String      @id @default(uuid())
+  day         Weekday
+  sessionType SessionType
+  locked      Boolean     @default(false) // épinglée à la main : conservée lors d'une régénération
+  semester    Int
+
+  scheduleId String
+  schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+
+  timeslotId String
+  timeslot   Timeslot @relation(fields: [timeslotId], references: [id], onDelete: Restrict)
+
+  teachingUnitId String
+  teachingUnit   TeachingUnit @relation(fields: [teachingUnitId], references: [id], onDelete: Restrict)
+
+  /// Public : null = tout le niveau (tronc commun), sinon une spécialité
+  audienceSpecialtyId String?
+  audienceSpecialty   Specialty? @relation(fields: [audienceSpecialtyId], references: [id], onDelete: Restrict)
+
+  teacherId String?
+  teacher   Teacher? @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+
+  roomId String?
+  room   Room?   @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// Un enseignant / une salle ne peut pas être à deux endroits au même moment
+  /// (PostgreSQL : les valeurs NULL ne se gênent pas entre elles)
+  @@unique([teacherId, academicYearId, semester, day, timeslotId])
+  @@unique([roomId, academicYearId, semester, day, timeslotId])
+  @@index([scheduleId])
+  @@map("schedule_sessions")
+}
+
+// =============================================================================
+//  CERTIFICATS DE SCOLARITÉ
+// =============================================================================
+
+enum CertificateStatus {
+  VALIDE
+  ANNULE // révoqué (erreur, fraude…) : la vérification en ligne l'indique
+}
+
+/// Certificat de scolarité émis pour une inscription (un étudiant, une année).
+/// - Numéro d'ordre séquentiel PAR ANNÉE ACADÉMIQUE : 1, 2, 3… → "CS-2026-00001"
+/// - Code de vérification aléatoire, imprimé en clair et dans le QR code
+///   (page publique /verifier/<code>)
+/// - snapshot : copie exacte des données imprimées → un duplicata est identique
+///   à l'original même si l'étudiant change ensuite de nom, de niveau…
+model Certificate {
+  id               String            @id @default(uuid())
+  orderNumber      Int // numéro d'ordre dans l'année
+  number           String            @unique // "CS-2026-00001"
+  verificationCode String            @unique
+  purpose          String? // motif facultatif (bourse, stage, visa…)
+  status           CertificateStatus @default(VALIDE)
+  issuedAt         DateTime          @default(now())
+  revokedAt        DateTime?
+  revokedReason    String?
+  snapshot         Json
+
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  enrollmentId String
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
+
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+
+  issuedById String?
+  issuedBy   User?   @relation("CertificatesIssued", fields: [issuedById], references: [id], onDelete: SetNull)
+
+  revokedById String?
+  revokedBy   User?   @relation("CertificatesRevoked", fields: [revokedById], references: [id], onDelete: SetNull)
+
+  @@unique([academicYearId, orderNumber])
+  @@index([studentId])
+  @@index([issuedAt])
+  @@map("certificates")
+}
+
+// =============================================================================
+//  COMPTEURS (numérotation automatique)
+// =============================================================================
+
+/// Compteurs atomiques pour les numéros uniques :
+///   "matricule:EIT:2026" → EIT-2026-00042 ; "teacher" → ENS-00007
+/// Incrément via INSERT … ON CONFLICT DO UPDATE … RETURNING (sans doublon même en parallèle).
+model Counter {
+  key   String @id
+  value Int    @default(0)
+
+  @@map("counters")
+}
+
+// =============================================================================
+//  DOCUMENTS GÉNÉRÉS (traçabilité des PDF officiels)
+// =============================================================================
+
+/// Registre des documents officiels émis (relevés, certificats…).
+/// Le "reference" unique + verificationCode permettent d'imprimer un QR code
+/// de vérification d'authenticité sur le PDF.
+model GeneratedDocument {
+  id               String       @id @default(uuid())
+  type             DocumentType
+  reference        String       @unique // ex. "CERT-2026-000123"
+  verificationCode String       @unique // code court aléatoire pour le QR code
+  fileUrl          String? // null : le PDF est régénéré à la demande à partir du snapshot
+  issuedAt         DateTime     @default(now())
+  issuedById       String? // id du User ayant généré le document
+  /// Données figées au moment de l'émission (le document reste fidèle même si
+  /// les notes changent ensuite)
+  snapshot         Json?
+
+  studentId String?
+  student   Student? @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  enrollmentId String?
+  enrollment   Enrollment? @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
+
+  @@index([studentId, type])
+  @@map("generated_documents")
+}

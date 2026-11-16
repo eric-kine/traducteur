@@ -1,0 +1,19 @@
+# Base PostgreSQL locale pour le développement.
+# Démarrage : npm run db:up
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: scolarix
+      POSTGRES_PASSWORD: scolarix
+      POSTGRES_DB: scolarix
+    ports:
+      - "5432:5432"
+    volumes:
+      - scolarix-db:/var/lib/postgresql/data
+      # Crée aussi la base de test "scolarix_test"
+      - ./docker/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+
+volumes:
+  scolarix-db:
