@@ -245,3 +245,65 @@ export interface TeacherServiceSummary {
   /** completedTdEquivalent × taux horaire de l'enseignant */
   amountDue: number | null;
 }
+
+export interface GradeSheetRow {
+  enrollmentId: string;
+  student: { id: string; matricule: string; firstName: string; lastName: string };
+  specialty: string | null;
+  ccScore: number | null;
+  examScore: number | null;
+  tpScore: number | null;
+  isAbsent: boolean;
+  comment: string | null;
+  finalScore: number | null;
+  /** Rattrapage : notes de la session normale (CC conservé) */
+  normal?: { ccScore: number | null; examScore: number | null; tpScore: number | null; isAbsent: boolean; finalScore: number | null } | null;
+}
+
+export interface GradeSheet {
+  teachingUnit: { id: string; code: string; title: string; semester: number; credits: number; coefficient: number; ccWeight: number; examWeight: number; tpWeight: number; levelId: string };
+  academicYear: { id: string; label: string };
+  session: 'NORMALE' | 'RATTRAPAGE';
+  locked: boolean;
+  canEdit: boolean;
+  rows: GradeSheetRow[];
+}
+
+export interface TranscriptUnit {
+  code: string;
+  title: string;
+  credits: number;
+  coefficient: number;
+  ccScore: number | null;
+  examScore: number | null;
+  tpScore: number | null;
+  isAbsent: boolean;
+  final: number | null;
+  session: 'NORMALE' | 'RATTRAPAGE' | null;
+  status: import('./calc/grades').UeStatus;
+  creditsEarned: number;
+}
+
+export interface TranscriptData {
+  reference: string | null;
+  verificationCode: string | null;
+  issuedAt: string;
+  institute: { name: string; acronym: string | null; address: string | null; city: string | null; country: string | null; phone: string | null; email: string | null; website: string | null; directorName: string | null };
+  school: { code: string; name: string; directorName: string | null };
+  student: { matricule: string; firstName: string; lastName: string; birthDate: string; birthPlace: string; gender: 'M' | 'F' };
+  academicYear: string;
+  level: { code: string; name: string };
+  specialty: { code: string; name: string; diplomaTitle: string | null } | null;
+  semesters: { number: number; average: number | null; totalCredits: number; creditsEarned: number; units: TranscriptUnit[] }[];
+  year: import('./calc/grades').YearResult;
+  deliberatedAt: string | null;
+  isProvisional: boolean;
+}
+
+export interface LevelResultsRow {
+  enrollmentId: string;
+  student: { id: string; matricule: string; firstName: string; lastName: string };
+  semesters: { number: number; average: number | null; creditsEarned: number; totalCredits: number }[];
+  year: import('./calc/grades').YearResult;
+  deliberatedAt: string | null;
+}

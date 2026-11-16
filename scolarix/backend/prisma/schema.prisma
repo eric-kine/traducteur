@@ -132,6 +132,7 @@ model User {
   teacher Teacher? // rempli si role = ENSEIGNANT
 
   refreshTokens RefreshToken[]
+  gradesEntered Grade[]        @relation("GradesEntered")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -420,7 +421,6 @@ model Teacher {
   user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   assignments    TeachingAssignment[]
-  grades         Grade[]              @relation("GradeEnteredBy")
   timetableSlots TimetableSlot[]
 
   createdAt DateTime @default(now())
@@ -474,7 +474,9 @@ model Enrollment {
   /// Résultats de fin d'année (calculés au module relevés)
   finalAverage  Decimal?         @db.Decimal(5, 2)
   creditsEarned Int?
-  decision      String? // "Admis", "Ajourné", "Admis avec dettes"…
+  decision      String? // ADMIS | ADMIS_AVEC_DETTES | AJOURNE (fixé à la délibération)
+  mention       String? // Très bien, Bien, Assez bien, Passable
+  deliberatedAt DateTime? // date de la délibération (notes verrouillées)
 
   studentId String
   student   Student @relation(fields: [studentId], references: [id], onDelete: Restrict)
@@ -502,16 +504,19 @@ model Enrollment {
 }
 
 /// Note d'un étudiant (via son inscription) dans une UE, pour une session.
-/// finalScore est calculé selon les pondérations de l'UE (ccWeight / examWeight / tpWeight).
+/// Règles de calcul : packages/shared/src/calc/grades.ts et docs/MODULE-04-NOTES.md
+///  - finalScore = (CC × ccWeight + Examen × examWeight + TP × tpWeight) / 100, calculé par le serveur
+///  - en RATTRAPAGE, seule la note d'examen (et de TP) est ressaisie ; le CC de la session normale est conservé
+///  - absent à l'examen (isAbsent) → examen compté 0, affiché "ABS"
 model Grade {
   id          String      @id @default(uuid())
   session     ExamSession @default(NORMALE)
   ccScore     Decimal?    @db.Decimal(4, 2) // /20
   examScore   Decimal?    @db.Decimal(4, 2) // /20
   tpScore     Decimal?    @db.Decimal(4, 2) // /20
-  finalScore  Decimal?    @db.Decimal(4, 2) // /20 — calculé
-  isAbsent    Boolean     @default(false)
-  isValidated Boolean     @default(false) // UE acquise (finalScore >= 10 ou compensation)
+  finalScore  Decimal?    @db.Decimal(4, 2) // /20 — calculé (null tant qu'une note requise manque)
+  isAbsent    Boolean     @default(false) // absent à l'examen
+  isValidated Boolean     @default(false) // finalScore >= note de validation (10)
   isLocked    Boolean     @default(false) // verrouillée après délibération
   comment     String?
 
@@ -521,9 +526,9 @@ model Grade {
   teachingUnitId String
   teachingUnit   TeachingUnit @relation(fields: [teachingUnitId], references: [id], onDelete: Restrict)
 
-  /// Enseignant ayant saisi la note (traçabilité)
-  enteredById String?
-  enteredBy   Teacher? @relation("GradeEnteredBy", fields: [enteredById], references: [id], onDelete: SetNull)
+  /// Utilisateur ayant saisi ou modifié la note en dernier (traçabilité)
+  enteredByUserId String?
+  enteredBy       User?   @relation("GradesEntered", fields: [enteredByUserId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -682,7 +687,7 @@ model GeneratedDocument {
   type             DocumentType
   reference        String       @unique // ex. "CERT-2026-000123"
   verificationCode String       @unique // code court aléatoire pour le QR code
-  fileUrl          String
+  fileUrl          String? // null : le PDF est régénéré à la demande à partir du snapshot
   issuedAt         DateTime     @default(now())
   issuedById       String? // id du User ayant généré le document
   /// Données figées au moment de l'émission (le document reste fidèle même si

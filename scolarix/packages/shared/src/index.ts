@@ -12,3 +12,5 @@ export * from './schemas/teaching-unit.schema';
 export * from './schemas/academic-year.schema';
 export * from './schemas/student.schema';
 export * from './schemas/teacher.schema';
+export * from './calc/grades';
+export * from './schemas/grade.schema';

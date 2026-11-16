@@ -1,6 +1,6 @@
 import { Fragment, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, BookMarked, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { ArrowLeft, BookMarked, ClipboardList, Pencil, Plus, Search, Trash2, Trophy } from 'lucide-react';
 import { formatAmount, formatHours, type TeachingUnitDto, type TeachingUnitTotals } from '@scolarix/shared';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -91,6 +91,7 @@ export function LevelCurriculumPage() {
       {canEdit && (
         <TableCell>
           <div className="flex justify-end gap-1">
+            <Button variant="ghost" size="icon" title="Saisir les notes" asChild><Link to={`/grades/${u.id}`}><ClipboardList /></Link></Button>
             <Button variant="ghost" size="icon" title="Modifier" onClick={() => setForm({ open: true, unit: u })}><Pencil /></Button>
             <Button variant="ghost" size="icon" title="Supprimer" onClick={() => setToDelete(u)}><Trash2 className="text-destructive" /></Button>
           </div>
@@ -109,7 +110,10 @@ export function LevelCurriculumPage() {
           <p className="text-sm text-muted-foreground">Maquette pédagogique</p>
           <h1 className="text-2xl font-bold">{level.name} <span className="font-mono text-lg text-muted-foreground">({level.code})</span></h1>
         </div>
-        {canEdit && <Button onClick={() => setForm({ open: true, unit: null })}><Plus /> Nouvelle UE</Button>}
+        <div className="flex gap-2">
+          <Button variant="outline" asChild><Link to={`/admin/levels/${levelId}/results`}><Trophy /> Résultats</Link></Button>
+          {canEdit && <Button onClick={() => setForm({ open: true, unit: null })}><Plus /> Nouvelle UE</Button>}
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

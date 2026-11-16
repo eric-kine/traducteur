@@ -67,9 +67,9 @@ export async function remove(id: string) {
   await findOrFail(id);
   const { _count } = await prisma.teacher.findUniqueOrThrow({
     where: { id },
-    select: { _count: { select: { assignments: true, grades: true, timetableSlots: true } } },
+    select: { _count: { select: { assignments: true, timetableSlots: true } } },
   });
-  assertNoDependents(_count, { assignments: 'affectation(s)', grades: 'note(s) saisie(s)', timetableSlots: 'créneau(x)' });
+  assertNoDependents(_count, { assignments: 'affectation(s)', timetableSlots: 'créneau(x)' });
   await prisma.teacher.delete({ where: { id } });
 }
 

@@ -17,6 +17,8 @@ import { StudentsPage } from '@/features/students/StudentsPage';
 import { StudentDetailPage } from '@/features/students/StudentDetailPage';
 import { TeachersPage } from '@/features/teachers/TeachersPage';
 import { TeacherDetailPage } from '@/features/teachers/TeacherDetailPage';
+import { GradeSheetPage } from '@/features/grades/GradeSheetPage';
+import { LevelResultsPage } from '@/features/grades/LevelResultsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -41,10 +43,14 @@ export default function App() {
                 <Route path="admin" element={<AdminPage />} />
                 <Route path="admin/schools/:id" element={<SchoolDetailPage />} />
                 <Route path="admin/levels/:id" element={<LevelCurriculumPage />} />
+                <Route path="admin/levels/:id/results" element={<LevelResultsPage />} />
                 <Route path="students" element={<StudentsPage />} />
                 <Route path="students/:id" element={<StudentDetailPage />} />
                 <Route path="teachers" element={<TeachersPage />} />
                 <Route path="teachers/:id" element={<TeacherDetailPage />} />
+              </Route>
+              <Route element={<ProtectedRoute roles={['ADMIN', 'SCOLARITE', 'ENSEIGNANT']} />}>
+                <Route path="grades/:unitId" element={<GradeSheetPage />} />
               </Route>
               <Route element={<ProtectedRoute roles={['ADMIN']} />}>
                 <Route path="users" element={<UsersPage />} />

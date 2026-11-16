@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Camera, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Camera, FileDown, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { openTranscript } from '../grades/grades.api';
 import { toast } from 'sonner';
 import { ENROLLMENT_STATUS_LABELS, GENDER_LABELS, STUDENT_STATUS_LABELS, type EnrollmentDto } from '@scolarix/shared';
 import { Badge } from '@/components/ui/badge';
@@ -135,6 +136,7 @@ export function StudentDetailPage() {
                   <TableCell><Badge variant={e.status === 'INSCRIT' || e.status === 'ADMIS' ? 'success' : 'muted'}>{ENROLLMENT_STATUS_LABELS[e.status]}</Badge></TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" title="Relevé de notes (PDF)" onClick={() => openTranscript(s.id, e.academicYear.label)}><FileDown /></Button>
                       <Button variant="ghost" size="icon" title="Modifier l'inscription" onClick={() => setEnrollForm({ open: true, enrollment: e })}><Pencil /></Button>
                       <Button variant="ghost" size="icon" title="Supprimer l'inscription" onClick={() => setConfirm(e)}><Trash2 className="text-destructive" /></Button>
                     </div>
