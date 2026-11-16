@@ -131,11 +131,36 @@ model User {
   student Student? // rempli si role = ETUDIANT
   teacher Teacher? // rempli si role = ENSEIGNANT
 
+  refreshTokens RefreshToken[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([role])
   @@map("users")
+}
+
+/// Jeton de rafraîchissement (session longue, 7 jours par défaut).
+/// - Seul le HASH SHA-256 est stocké : une fuite de la base ne permet pas de se connecter.
+/// - Rotation : chaque utilisation révoque le jeton et en crée un nouveau (replacedById).
+/// - Détection de vol : si un jeton déjà révoqué est réutilisé, toutes les
+///   sessions de l'utilisateur sont révoquées.
+model RefreshToken {
+  id           String    @id @default(uuid())
+  tokenHash    String    @unique
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?
+  userAgent    String?
+  ipAddress    String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
 }
 
 // =============================================================================

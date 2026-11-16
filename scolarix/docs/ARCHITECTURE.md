@@ -158,6 +158,7 @@ Le schéma complet et commenté est dans
 | `Room` | Salles, nécessaires au générateur d'emploi du temps. |
 | `TimetableSlot` | Créneaux (jour, heure, UE, enseignant, salle) d'un emploi du temps. |
 | `GeneratedDocument` | Registre des PDF officiels émis (référence unique, code de vérification QR). |
+| `RefreshToken` | Sessions de connexion (ajouté au module 1). |
 
 **Règles métier clés portées par le schéma**
 
