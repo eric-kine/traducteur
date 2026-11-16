@@ -17,6 +17,7 @@ import { enrollmentsRouter } from './modules/enrollments/enrollments.routes';
 import { teachersRouter } from './modules/teachers/teachers.routes';
 import { assignmentsRouter, coverageRouter } from './modules/assignments/assignments.routes';
 import { gradesRouter } from './modules/grades/grades.routes';
+import { certificatesRouter, publicVerifyRouter } from './modules/certificates/certificates.routes';
 import { errorHandler, notFoundHandler } from './common/middlewares/error-handler';
 
 export function createApp() {
@@ -33,9 +34,12 @@ export function createApp() {
     res.json({ status: 'ok' });
   });
 
+  // Vérification publique des documents (QR code) : sans authentification
+  app.use('/api/public/verify', publicVerifyRouter);
   app.use('/api/auth', authRouter);
   // Notes, résultats et relevés (chemins complets, monté avant les autres routeurs)
   app.use('/api', gradesRouter);
+  app.use('/api', certificatesRouter);
   app.use('/api/users', usersRouter);
   app.use('/api/institute', instituteRouter);
   app.use('/api/schools/:schoolId/specialties', schoolSpecialtiesRouter);

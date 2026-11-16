@@ -1,4 +1,3 @@
-import crypto from 'node:crypto';
 import type { TranscriptData } from '@scolarix/shared';
 import { prisma } from '../../config/prisma';
 import { AppError } from '../../common/errors/AppError';
@@ -8,13 +7,10 @@ import type { AuthUser } from '../../common/types';
 import { assertSchoolAccess } from '../../common/middlewares/school-scope';
 import { htmlToPdf } from '../../pdf/pdf.service';
 import { renderTranscript } from '../../pdf/templates/transcript';
+import { qrSvg } from '../../pdf/qr';
+import { newVerificationCode, verificationUrl } from '../../common/utils/verification';
 import { computeEnrollment, loadEnrollment } from './results.service';
 
-/** Code court lisible (sans 0/O, 1/I) pour vérifier l'authenticité d'un document. */
-function verificationCode() {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  return Array.from(crypto.randomBytes(10), (b) => alphabet[b % alphabet.length]).join('');
-}
 
 /** Rassemble toutes les données du relevé d'un étudiant pour une année (ex. "2026-2027"). */
 export async function buildTranscriptData(user: AuthUser, studentId: string, yearLabel: string): Promise<TranscriptData & { enrollmentId: string }> {
@@ -65,8 +61,8 @@ export async function issueTranscript(user: AuthUser, studentId: string, yearLab
   if (format === 'html') return { html: renderTranscript(data) };
 
   data.reference = `RN-${yearLabel.slice(0, 4)}-${String(await nextCounter(`transcript:${yearLabel.slice(0, 4)}`)).padStart(6, '0')}`;
-  data.verificationCode = verificationCode();
-  const pdf = await htmlToPdf(renderTranscript(data));
+  data.verificationCode = newVerificationCode();
+  const pdf = await htmlToPdf(renderTranscript(data, await qrSvg(verificationUrl(data.verificationCode))));
   await prisma.generatedDocument.create({
     data: {
       type: 'RELEVE_NOTES',

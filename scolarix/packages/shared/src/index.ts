@@ -14,3 +14,4 @@ export * from './schemas/student.schema';
 export * from './schemas/teacher.schema';
 export * from './calc/grades';
 export * from './schemas/grade.schema';
+export * from './schemas/certificate.schema';

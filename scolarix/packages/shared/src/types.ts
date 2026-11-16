@@ -307,3 +307,55 @@ export interface LevelResultsRow {
   year: import('./calc/grades').YearResult;
   deliberatedAt: string | null;
 }
+
+/** Données imprimées sur un certificat (et figées dans Certificate.snapshot). */
+export interface CertificateData {
+  number: string;
+  orderNumber: number;
+  verificationCode: string | null;
+  verificationUrl: string | null;
+  issuedAt: string;
+  purpose: string | null;
+  institute: TranscriptData['institute'];
+  school: TranscriptData['school'];
+  student: TranscriptData['student'] & { nationality: string | null };
+  academicYear: { label: string; startDate: string; endDate: string };
+  level: { code: string; name: string; cycle: string };
+  specialty: { code: string; name: string; diplomaTitle: string | null } | null;
+  isRepeating: boolean;
+  /** L'année est terminée → "était régulièrement inscrit(e)" */
+  isPastYear: boolean;
+}
+
+export interface CertificateDto {
+  id: string;
+  number: string;
+  orderNumber: number;
+  verificationCode: string;
+  purpose: string | null;
+  status: 'VALIDE' | 'ANNULE';
+  issuedAt: string;
+  revokedAt: string | null;
+  revokedReason: string | null;
+  issuedBy: string | null;
+  student: { id: string; matricule: string; firstName: string; lastName: string };
+  school: { code: string; name: string };
+  level: string;
+  specialty: string | null;
+  academicYear: string;
+}
+
+/** Réponse de la vérification publique d'un document (informations minimales). */
+export interface VerificationResult {
+  valid: boolean;
+  type: 'CERTIFICAT_SCOLARITE' | 'RELEVE_NOTES';
+  reference: string;
+  status: 'VALIDE' | 'ANNULE';
+  issuedAt: string;
+  revokedAt: string | null;
+  student: { fullName: string; matricule: string };
+  school: string;
+  institute: string;
+  level: string;
+  academicYear: string;
+}

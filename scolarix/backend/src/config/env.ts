@@ -15,6 +15,8 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
   /** Dossier des fichiers envoyés (photos). Hors du dépôt Git. */
   UPLOAD_DIR: z.string().default('./uploads'),
+  /** Adresse publique du site : sert à construire le lien du QR code de vérification. */
+  PUBLIC_APP_URL: z.string().url().default('http://localhost:5173'),
 });
 
 const parsed = envSchema.safeParse(process.env);

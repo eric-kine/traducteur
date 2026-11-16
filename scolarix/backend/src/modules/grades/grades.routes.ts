@@ -13,39 +13,40 @@ import { issueTranscript } from './transcript.service';
 
 /** Monté sur /api (avant les autres routeurs) : notes, résultats, délibération, relevés. */
 export const gradesRouter = Router();
-gradesRouter.use(authenticate);
+// Pas de gradesRouter.use(authenticate) : ce routeur est monté sur /api, la vérification
+// de connexion est donc placée sur chaque route (sinon elle s'appliquerait à tout /api).
 
 const yearBody = validate(z.object({ academicYearId: z.string().uuid() }));
 const yearQuery = validate(z.object({ academicYearId: z.string().uuid() }), 'query');
 const staff = authorize('ADMIN', 'SCOLARITE');
 
 // ---- Feuille de notes d'une UE ----
-gradesRouter.get('/teaching-units/:id/grades', authorize('ADMIN', 'SCOLARITE', 'ENSEIGNANT'), validate(uuidParam('id'), 'params'),
+gradesRouter.get('/teaching-units/:id/grades', authenticate, authorize('ADMIN', 'SCOLARITE', 'ENSEIGNANT'), validate(uuidParam('id'), 'params'),
   validate(gradeSheetQuerySchema, 'query'), async (req, res) => {
     const q = res.locals.query;
     res.json({ sheet: await grades.getSheet(req.user!, res.locals.params.id, q.academicYearId, q.session) });
   });
-gradesRouter.put('/teaching-units/:id/grades', authorize('ADMIN', 'SCOLARITE', 'ENSEIGNANT'), validate(uuidParam('id'), 'params'),
+gradesRouter.put('/teaching-units/:id/grades', authenticate, authorize('ADMIN', 'SCOLARITE', 'ENSEIGNANT'), validate(uuidParam('id'), 'params'),
   validate(saveGradeSheetSchema), async (req, res) => {
     res.json({ sheet: await grades.saveSheet(req.user!, res.locals.params.id, res.locals.body) });
   });
 
 // ---- Résultats ----
-gradesRouter.get('/enrollments/:id/results', staff, validate(uuidParam('id'), 'params'), async (req, res) => {
+gradesRouter.get('/enrollments/:id/results', authenticate, staff, validate(uuidParam('id'), 'params'), async (req, res) => {
   res.json({ results: await results.getEnrollmentResults(req.user!, res.locals.params.id) });
 });
-gradesRouter.get('/levels/:id/results', staff, validate(uuidParam('id'), 'params'), yearQuery, async (req, res) => {
+gradesRouter.get('/levels/:id/results', authenticate, staff, validate(uuidParam('id'), 'params'), yearQuery, async (req, res) => {
   res.json({ data: await results.levelResults(req.user!, res.locals.params.id, res.locals.query.academicYearId) });
 });
-gradesRouter.post('/levels/:id/deliberation', staff, validate(uuidParam('id'), 'params'), yearBody, async (req, res) => {
+gradesRouter.post('/levels/:id/deliberation', authenticate, staff, validate(uuidParam('id'), 'params'), yearBody, async (req, res) => {
   res.json(await results.deliberate(req.user!, res.locals.params.id, res.locals.body.academicYearId));
 });
-gradesRouter.post('/levels/:id/deliberation/reopen', authorize('ADMIN'), validate(uuidParam('id'), 'params'), yearBody, async (_req, res) => {
+gradesRouter.post('/levels/:id/deliberation/reopen', authenticate, authorize('ADMIN'), validate(uuidParam('id'), 'params'), yearBody, async (_req, res) => {
   res.json(await results.reopen(res.locals.params.id, res.locals.body.academicYearId));
 });
 
 // ---- Relevé de notes : GET /api/students/:id/transcript?year=2026-2027[&format=html] ----
-gradesRouter.get('/students/:id/transcript', staff, validate(uuidParam('id'), 'params'), validate(transcriptQuerySchema, 'query'), async (req, res) => {
+gradesRouter.get('/students/:id/transcript', authenticate, staff, validate(uuidParam('id'), 'params'), validate(transcriptQuerySchema, 'query'), async (req, res) => {
   const { year, format } = res.locals.query;
   const out = await issueTranscript(req.user!, res.locals.params.id, year, format);
   if ('html' in out) {
@@ -62,7 +63,7 @@ gradesRouter.get('/students/:id/transcript', staff, validate(uuidParam('id'), 'p
 });
 
 // ---- Aperçu du gabarit avec des données fictives ----
-gradesRouter.get('/transcripts/preview', staff, validate(z.object({ format: z.enum(['html', 'pdf']).default('html') }), 'query'), async (_req, res) => {
+gradesRouter.get('/transcripts/preview', authenticate, staff, validate(z.object({ format: z.enum(['html', 'pdf']).default('html') }), 'query'), async (_req, res) => {
   const html = renderTranscript(sampleTranscript());
   if (res.locals.query.format === 'html') {
     res.type('html').set('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; img-src data:").send(html);

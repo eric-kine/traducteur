@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import type { GradeSheet, LevelResultsRow, SaveGradeSheetInput } from '@scolarix/shared';
 import { api } from '@/lib/api';
+import { openDocument } from '@/lib/open-document';
 
 export type Session = 'NORMALE' | 'RATTRAPAGE';
 
@@ -45,21 +45,6 @@ export function useDeliberation(levelId: string) {
   };
 }
 
-/**
- * Ouvre le relevé (PDF officiel enregistré au registre, ou aperçu HTML)
- * dans un nouvel onglet. L'onglet est ouvert tout de suite pour ne pas être
- * bloqué par le navigateur, puis rempli quand le document est prêt.
- */
-export async function openTranscript(studentId: string, year: string, format: 'pdf' | 'html' = 'pdf') {
-  const win = window.open('', '_blank');
-  win?.document.write('<p style="font-family:sans-serif;padding:2rem">Génération du relevé…</p>');
-  try {
-    const blob = await api<Blob>(`/students/${studentId}/transcript?year=${encodeURIComponent(year)}&format=${format}`, { raw: true });
-    const url = URL.createObjectURL(blob);
-    if (win) win.location.href = url;
-    else Object.assign(document.createElement('a'), { href: url, download: `releve-${year}.pdf` }).click();
-  } catch (e) {
-    win?.close();
-    toast.error(e instanceof Error ? e.message : 'Impossible de générer le relevé');
-  }
-}
+/** Ouvre le relevé (PDF officiel enregistré au registre, ou aperçu HTML) dans un nouvel onglet. */
+export const openTranscript = (studentId: string, year: string, format: 'pdf' | 'html' = 'pdf') =>
+  openDocument(`/students/${studentId}/transcript?year=${encodeURIComponent(year)}&format=${format}`, `releve-${year}.pdf`);

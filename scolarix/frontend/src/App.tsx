@@ -19,6 +19,8 @@ import { TeachersPage } from '@/features/teachers/TeachersPage';
 import { TeacherDetailPage } from '@/features/teachers/TeacherDetailPage';
 import { GradeSheetPage } from '@/features/grades/GradeSheetPage';
 import { LevelResultsPage } from '@/features/grades/LevelResultsPage';
+import { CertificatesPage } from '@/features/certificates/CertificatesPage';
+import { VerifyPage } from '@/features/certificates/VerifyPage';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -35,6 +37,8 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          {/* Page publique : vérification d'un document via son QR code */}
+          <Route path="/verifier/:code" element={<VerifyPage />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<AppShell />}>
               <Route index element={<HomePage />} />
@@ -48,6 +52,7 @@ export default function App() {
                 <Route path="students/:id" element={<StudentDetailPage />} />
                 <Route path="teachers" element={<TeachersPage />} />
                 <Route path="teachers/:id" element={<TeacherDetailPage />} />
+                <Route path="certificates" element={<CertificatesPage />} />
               </Route>
               <Route element={<ProtectedRoute roles={['ADMIN', 'SCOLARITE', 'ENSEIGNANT']} />}>
                 <Route path="grades/:unitId" element={<GradeSheetPage />} />

@@ -7,9 +7,9 @@ const score = (v: number | null, absent = false) => (absent ? 'ABS' : formatScor
 
 /**
  * Gabarit HTML du relevé de notes (A4). Toutes les valeurs sont échappées.
- * Aperçu : npm run preview:transcript -w backend → docs/apercu-releve.html / .pdf
+ * Aperçu : npm run preview:documents -w backend → docs/apercu-releve.html / .pdf
  */
-export function renderTranscript(d: TranscriptData): string {
+export function renderTranscript(d: TranscriptData, qr?: string): string {
   const i = d.institute;
   const contact = [i.address, [i.city, i.country].filter(Boolean).join(', '), i.phone, i.email, i.website].filter(Boolean).map(esc).join(' · ');
   const signatory = d.school.directorName ?? i.directorName;
@@ -70,6 +70,8 @@ export function renderTranscript(d: TranscriptData): string {
 <title>Relevé de notes — ${esc(d.student.lastName)} ${esc(d.student.firstName)} — ${esc(d.academicYear)}</title>
 <style>
   ${BASE_CSS}
+  .qr { width: 62px; height: 62px; flex: none; }
+  .qr svg { width: 62px; height: 62px; }
   .identity { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 24px; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px 12px; background: #f8fafc; }
   .identity div { display: flex; gap: 6px; }
   .identity span { color: #6b7280; min-width: 92px; }
@@ -113,6 +115,7 @@ export function renderTranscript(d: TranscriptData): string {
       ${d.reference ? `Réf. <strong>${esc(d.reference)}</strong>` : ''}
       ${d.verificationCode ? `Code de vérification <strong>${esc(d.verificationCode)}</strong>` : ''}
     </div>
+    ${qr ? `<div class="qr" title="Vérifier ce document">${qr}</div>` : ''}
   </header>
 
   <div class="title">

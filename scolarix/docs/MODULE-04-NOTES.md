@@ -95,7 +95,7 @@ Ces trois éléments servent à vérifier l'authenticité d'un relevé. Un aper�
   - **Bilan** : moyenne annuelle, crédits, mention, décision.
   - **Légende**, puis « Fait à … le … » et la signature du directeur de l'école (ou, à défaut, de l'institut).
   - Avant la délibération, le filigrane **PROVISOIRE** apparaît.
-- **Aperçu du gabarit** : [`apercu-releve.html`](apercu-releve.html) et [`apercu-releve.pdf`](apercu-releve.pdf), avec des données fictives. Pour les régénérer : `npm run preview:transcript -w backend`.
+- **Aperçu du gabarit** : [`apercu-releve.html`](apercu-releve.html) et [`apercu-releve.pdf`](apercu-releve.pdf), avec des données fictives. Pour les régénérer : `npm run preview:documents -w backend`.
 
 ## 5. Écrans
 
