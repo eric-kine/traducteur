@@ -11,6 +11,11 @@ import { schoolsRouter } from './modules/schools/schools.routes';
 import { schoolSpecialtiesRouter, specialtiesRouter } from './modules/specialties/specialties.routes';
 import { levelsRouter, schoolLevelsRouter } from './modules/levels/levels.routes';
 import { levelTeachingUnitsRouter, teachingUnitsRouter } from './modules/teaching-units/teaching-units.routes';
+import { academicYearsRouter } from './modules/academic-years/academic-years.routes';
+import { studentsRouter } from './modules/students/students.routes';
+import { enrollmentsRouter } from './modules/enrollments/enrollments.routes';
+import { teachersRouter } from './modules/teachers/teachers.routes';
+import { assignmentsRouter, coverageRouter } from './modules/assignments/assignments.routes';
 import { errorHandler, notFoundHandler } from './common/middlewares/error-handler';
 
 export function createApp() {
@@ -36,7 +41,13 @@ export function createApp() {
   app.use('/api/specialties', specialtiesRouter);
   app.use('/api/levels/:levelId/teaching-units', levelTeachingUnitsRouter);
   app.use('/api/levels', levelsRouter);
+  app.use('/api/teaching-units/:id/coverage', coverageRouter);
   app.use('/api/teaching-units', teachingUnitsRouter);
+  app.use('/api/academic-years', academicYearsRouter);
+  app.use('/api/students', studentsRouter);
+  app.use('/api/enrollments', enrollmentsRouter);
+  app.use('/api/teachers', teachersRouter);
+  app.use('/api/assignments', assignmentsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

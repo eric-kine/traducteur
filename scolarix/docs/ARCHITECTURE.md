@@ -250,11 +250,10 @@ User ──▶ School (0..1)  // périmètre d'un agent SCOLARITE
 | **0 bis** | Socle technique & authentification | ✅ JWT + rôles, utilisateurs — [`MODULE-00b-AUTH.md`](MODULE-00b-AUTH.md) |
 | **1** | Institut, écoles, spécialités, niveaux | ✅ CRUD complets, page Administration — [`MODULE-01-STRUCTURE.md`](MODULE-01-STRUCTURE.md) |
 | **2** | Unités d'Enseignement & quotas horaires | ✅ UE par niveau, CM/TD/TP, total calculé, volume payé, taux horaire, contenu pédagogique — [`MODULE-02-UE.md`](MODULE-02-UE.md) |
-| **3** | Années académiques, étudiants & inscriptions | Années (année courante) ; CRUD étudiants, matricule auto, import CSV/Excel, inscriptions annuelles, compte étudiant |
-| **4** | Enseignants & affectations | CRUD enseignants, disponibilités, affectation aux UE, heures affectées vs quotas, heures payées |
-| **5** | Notes | Saisie par UE, moyennes UE / semestre / année, crédits, rattrapage, verrouillage, délibération |
-| **6** | Relevés de notes (PDF) | Moteur PDF Puppeteer, gabarit relevé, génération unitaire et en lot, registre + QR de vérification |
-| **7** | Certificats de scolarité (PDF) | Gabarit certificat, génération à la demande, page publique de vérification |
-| **8** | Syllabus | Pré-remplissage automatique depuis l'UE, éditeur, export PDF |
-| **9** | Emplois du temps | Salles, algorithme de contraintes, ajustement manuel, vues classe/enseignant/salle, export PDF |
-| **10** | Tableaux de bord & finitions | Statistiques par école, journal d'audit, déploiement |
+| **3** | Étudiants, enseignants, affectations & inscriptions | ✅ années académiques, matricule auto, photo, import CSV, affectations avec quotas — [`MODULE-03-PERSONNES.md`](MODULE-03-PERSONNES.md) |
+| **4** | Notes | Saisie par UE, moyennes UE / semestre / année, crédits, rattrapage, verrouillage, délibération |
+| **5** | Relevés de notes (PDF) | Moteur PDF Puppeteer, gabarit relevé, génération unitaire et en lot, registre + QR de vérification |
+| **6** | Certificats de scolarité (PDF) | Gabarit certificat, génération à la demande, page publique de vérification |
+| **7** | Syllabus | Pré-remplissage automatique depuis l'UE, éditeur, export PDF |
+| **8** | Emplois du temps | Salles, algorithme de contraintes, ajustement manuel, vues classe/enseignant/salle, export PDF |
+| **9** | Tableaux de bord & finitions | Comptes étudiant/enseignant liés, statistiques, journal d'audit, déploiement |

@@ -20,3 +20,28 @@ export const LEVEL_CYCLE_LABELS: Record<LevelCycle, string> = {
   DOCTORAT: 'Doctorat',
   AUTRE: 'Autre',
 };
+
+export const GENDERS = ['M', 'F'] as const;
+export type Gender = (typeof GENDERS)[number];
+export const GENDER_LABELS: Record<Gender, string> = { M: 'Masculin', F: 'Féminin' };
+
+export const STUDENT_STATUSES = ['ACTIF', 'SUSPENDU', 'DIPLOME', 'ABANDON', 'EXCLU'] as const;
+export type StudentStatus = (typeof STUDENT_STATUSES)[number];
+export const STUDENT_STATUS_LABELS: Record<StudentStatus, string> = {
+  ACTIF: 'Actif', SUSPENDU: 'Suspendu', DIPLOME: 'Diplômé', ABANDON: 'Abandon', EXCLU: 'Exclu',
+};
+
+export const TEACHER_STATUSES = ['PERMANENT', 'VACATAIRE', 'INVITE'] as const;
+export type TeacherStatus = (typeof TEACHER_STATUSES)[number];
+export const TEACHER_STATUS_LABELS: Record<TeacherStatus, string> = {
+  PERMANENT: 'Permanent', VACATAIRE: 'Vacataire', INVITE: 'Invité',
+};
+
+export const ENROLLMENT_STATUSES = ['EN_ATTENTE', 'INSCRIT', 'ADMIS', 'AJOURNE', 'ANNULE'] as const;
+export type EnrollmentStatus = (typeof ENROLLMENT_STATUSES)[number];
+export const ENROLLMENT_STATUS_LABELS: Record<EnrollmentStatus, string> = {
+  EN_ATTENTE: 'En attente', INSCRIT: 'Inscrit', ADMIS: 'Admis', AJOURNE: 'Ajourné', ANNULE: 'Annulé',
+};
+
+export const SESSION_TYPES = ['CM', 'TD', 'TP'] as const;
+export type SessionType = (typeof SESSION_TYPES)[number];

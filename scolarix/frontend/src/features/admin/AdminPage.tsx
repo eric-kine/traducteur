@@ -2,13 +2,15 @@ import { useSearchParams } from 'react-router-dom';
 import { Tabs } from '@/components/ui/tabs';
 import { InstitutePanel } from '../institute/InstitutePanel';
 import { SchoolsPanel } from '../schools/SchoolsPanel';
+import { AcademicYearsPanel } from '../academic-years/AcademicYearsPanel';
 
-type Tab = 'institute' | 'schools';
+type Tab = 'institute' | 'schools' | 'years';
 
 /** Page d'administration : institut + écoles (l'onglet actif est dans l'URL). */
 export function AdminPage() {
   const [params, setParams] = useSearchParams();
-  const tab: Tab = params.get('tab') === 'schools' ? 'schools' : 'institute';
+  const t = params.get('tab');
+  const tab: Tab = t === 'schools' || t === 'years' ? t : 'institute';
 
   return (
     <div className="space-y-6">
@@ -22,9 +24,10 @@ export function AdminPage() {
         items={[
           { value: 'institute', label: 'Institut' },
           { value: 'schools', label: 'Écoles' },
+          { value: 'years', label: 'Années académiques' },
         ]}
       />
-      {tab === 'institute' ? <InstitutePanel /> : <SchoolsPanel />}
+      {tab === 'institute' ? <InstitutePanel /> : tab === 'schools' ? <SchoolsPanel /> : <AcademicYearsPanel />}
     </div>
   );
 }

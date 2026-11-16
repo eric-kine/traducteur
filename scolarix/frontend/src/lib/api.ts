@@ -50,31 +50,34 @@ export function refreshSession(): Promise<AuthResponse | null> {
   return refreshing;
 }
 
-type Options = Omit<RequestInit, 'body'> & { body?: unknown };
+type Options = Omit<RequestInit, 'body'> & { body?: unknown; raw?: boolean };
 
 /**
  * Appel à l'API. Si le jeton d'accès a expiré (401), on rafraîchit la
  * session une fois puis on rejoue la requête.
  */
-export async function api<T>(path: string, { body, headers, ...init }: Options = {}, retry = true): Promise<T> {
+export async function api<T>(path: string, { body, headers, raw, ...init }: Options = {}, retry = true): Promise<T> {
+  // FormData (envoi de fichier) : le navigateur fixe lui-même l'en-tête multipart
+  const isForm = body instanceof FormData;
   const res = await fetch(`/api${path}`, {
     ...init,
     credentials: 'include',
     headers: {
-      ...(body !== undefined && { 'Content-Type': 'application/json' }),
+      ...(body !== undefined && !isForm && { 'Content-Type': 'application/json' }),
       ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
       ...headers,
     },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
   });
 
   if (res.status === 401 && retry && !path.startsWith('/auth/login')) {
     const session = await refreshSession();
-    if (session) return api<T>(path, { body, headers, ...init }, false);
+    if (session) return api<T>(path, { body, headers, raw, ...init }, false);
     accessToken = null;
     onSessionLost();
   }
   if (!res.ok) throw await parseError(res);
   if (res.status === 204) return undefined as T;
+  if (raw) return (await res.blob()) as T;
   return res.json() as Promise<T>;
 }

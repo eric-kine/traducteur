@@ -370,12 +370,15 @@ model Student {
   email       String?
   phone       String?
   address     String?
-  photoUrl    String?
+  /// Nom du fichier photo dans UPLOAD_DIR/students (servi uniquement via l'API authentifiée)
+  photoPath   String?
   status      StudentStatus @default(ACTIF)
 
   // Contact d'urgence / tuteur
-  guardianName  String?
-  guardianPhone String?
+  guardianName     String?
+  guardianRelation String? // "Père", "Mère", "Tuteur"…
+  guardianPhone    String?
+  guardianEmail    String?
 
   schoolId String
   school   School @relation(fields: [schoolId], references: [id], onDelete: Restrict)
@@ -397,7 +400,7 @@ model Student {
 /// Enseignant. Non rattaché à une école : il peut intervenir dans plusieurs écoles.
 model Teacher {
   id             String        @id @default(uuid())
-  employeeNumber String        @unique
+  employeeNumber String        @unique // "ENS-00001" (généré par le service)
   firstName      String
   lastName       String
   title          String? // "Dr", "Pr", "M.", "Mme"
@@ -429,12 +432,15 @@ model Teacher {
 /// Affectation d'un enseignant à une UE pour une année et un type de séance.
 /// Une UE peut avoir un enseignant pour le CM et un autre pour les TD/TP.
 model TeachingAssignment {
-  id            String      @id @default(uuid())
-  sessionType   SessionType
-  /// Heures confiées à cet enseignant pour ce type de séance
-  assignedHours Decimal     @db.Decimal(6, 2)
+  id             String      @id @default(uuid())
+  sessionType    SessionType
+  /// Heures prévues (confiées) pour ce type de séance — leur somme par UE ne
+  /// peut pas dépasser le quota de l'UE (cmHours / tdHours / tpHours)
+  assignedHours  Decimal     @db.Decimal(6, 2)
+  /// Heures effectivement assurées (mises à jour au fil de l'année, base de paiement)
+  completedHours Decimal     @default(0) @db.Decimal(6, 2)
   /// Responsable de l'UE (rédige le syllabus, valide les notes)
-  isCoordinator Boolean     @default(false)
+  isCoordinator  Boolean     @default(false)
 
   teacherId String
   teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Restrict)
@@ -450,6 +456,7 @@ model TeachingAssignment {
 
   @@unique([teacherId, teachingUnitId, academicYearId, sessionType])
   @@index([teachingUnitId, academicYearId])
+  @@index([teacherId, academicYearId])
   @@map("teaching_assignments")
 }
 
@@ -647,6 +654,20 @@ model TimetableSlot {
   @@index([teacherId, day])
   @@index([roomId, day])
   @@map("timetable_slots")
+}
+
+// =============================================================================
+//  COMPTEURS (numérotation automatique)
+// =============================================================================
+
+/// Compteurs atomiques pour les numéros uniques :
+///   "matricule:EIT:2026" → EIT-2026-00042 ; "teacher" → ENS-00007
+/// Incrément via INSERT … ON CONFLICT DO UPDATE … RETURNING (sans doublon même en parallèle).
+model Counter {
+  key   String @id
+  value Int    @default(0)
+
+  @@map("counters")
 }
 
 // =============================================================================

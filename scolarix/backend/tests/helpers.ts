@@ -9,7 +9,7 @@ export const PASSWORD = 'Secret123';
 
 /** Vide les tables entre deux tests. */
 export async function resetDb() {
-  await prisma.$executeRawUnsafe('TRUNCATE TABLE "refresh_tokens", "users", "teaching_units", "levels", "specialties", "schools", "institutes" CASCADE');
+  await prisma.$executeRawUnsafe('TRUNCATE TABLE "refresh_tokens", "users", "counters", "teaching_assignments", "enrollments", "students", "teachers", "academic_years", "teaching_units", "levels", "specialties", "schools", "institutes" CASCADE');
 }
 
 export async function createUser(role: Role, email = `${role.toLowerCase()}@test.local`, extra = {}) {

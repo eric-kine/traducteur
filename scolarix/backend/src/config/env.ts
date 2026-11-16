@@ -13,6 +13,8 @@ const envSchema = z.object({
   ACCESS_TOKEN_TTL_MINUTES: z.coerce.number().int().positive().default(15),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
+  /** Dossier des fichiers envoyés (photos). Hors du dépôt Git. */
+  UPLOAD_DIR: z.string().default('./uploads'),
 });
 
 const parsed = envSchema.safeParse(process.env);

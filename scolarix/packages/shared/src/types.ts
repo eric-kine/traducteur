@@ -133,3 +133,115 @@ export interface TeachingUnitListResponse {
   totals: { semester1: TeachingUnitTotals; semester2: TeachingUnitTotals; year: TeachingUnitTotals };
   level: { id: string; code: string; name: string; requiredCredits: number; schoolId: string };
 }
+
+export interface AcademicYearDto {
+  id: string;
+  label: string;
+  startDate: string; // AAAA-MM-JJ
+  endDate: string;
+  isCurrent: boolean;
+  _count?: { enrollments: number; assignments: number };
+}
+
+export interface EnrollmentDto {
+  id: string;
+  studentId: string;
+  status: import('./enums').EnrollmentStatus;
+  isRepeating: boolean;
+  enrolledAt: string;
+  academicYear: { id: string; label: string };
+  level: { id: string; code: string; name: string };
+  specialty: { id: string; code: string; name: string } | null;
+  student?: { id: string; matricule: string; firstName: string; lastName: string };
+}
+
+export interface StudentDto {
+  id: string;
+  matricule: string;
+  firstName: string;
+  lastName: string;
+  gender: import('./enums').Gender;
+  birthDate: string; // AAAA-MM-JJ
+  birthPlace: string;
+  nationality: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  hasPhoto: boolean;
+  status: import('./enums').StudentStatus;
+  guardianName: string | null;
+  guardianRelation: string | null;
+  guardianPhone: string | null;
+  guardianEmail: string | null;
+  school: { id: string; code: string; name: string };
+  /** Inscription la plus récente */
+  currentEnrollment: EnrollmentDto | null;
+  createdAt: string;
+}
+
+export interface ImportRowResult {
+  line: number; // numéro de ligne dans le fichier (en-tête = 1)
+  status: 'ok' | 'error' | 'duplicate';
+  name: string;
+  errors: string[];
+  matricule?: string;
+}
+export interface ImportReport {
+  dryRun: boolean;
+  total: number;
+  valid: number;
+  errors: number;
+  duplicates: number;
+  imported: number;
+  rows: ImportRowResult[];
+}
+
+export interface TeacherDto {
+  id: string;
+  employeeNumber: string;
+  title: string | null;
+  firstName: string;
+  lastName: string;
+  grade: string | null;
+  specialtyField: string | null;
+  email: string;
+  phone: string | null;
+  status: import('./enums').TeacherStatus;
+  hourlyRate: number | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface AssignmentDto {
+  id: string;
+  sessionType: import('./enums').SessionType;
+  assignedHours: number;
+  completedHours: number;
+  isCoordinator: boolean;
+  academicYear: { id: string; label: string };
+  teacher: { id: string; employeeNumber: string; title: string | null; firstName: string; lastName: string; hourlyRate: number | null };
+  teachingUnit: {
+    id: string; code: string; title: string; semester: number;
+    level: { id: string; code: string; name: string; school: { id: string; code: string; name: string } };
+  };
+}
+
+/** Couverture d'une UE pour une année : quota, heures affectées, reste à affecter. */
+export interface CoverageDto {
+  teachingUnitId: string;
+  academicYearId: string;
+  byType: Record<import('./enums').SessionType, { quota: number; assigned: number; completed: number; remaining: number }>;
+}
+
+/** Service d'un enseignant pour une année. */
+export interface TeacherServiceSummary {
+  assigned: Record<import('./enums').SessionType, number>;
+  completed: Record<import('./enums').SessionType, number>;
+  assignedTotal: number;
+  completedTotal: number;
+  /** Heures assurées converties en équivalent TD */
+  completedTdEquivalent: number;
+  hourlyRate: number | null;
+  /** completedTdEquivalent × taux horaire de l'enseignant */
+  amountDue: number | null;
+}

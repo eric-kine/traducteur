@@ -9,3 +9,6 @@ export * from './schemas/specialty.schema';
 export * from './schemas/level.schema';
 export * from './calc/teaching-unit';
 export * from './schemas/teaching-unit.schema';
+export * from './schemas/academic-year.schema';
+export * from './schemas/student.schema';
+export * from './schemas/teacher.schema';

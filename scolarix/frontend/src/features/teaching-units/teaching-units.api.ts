@@ -15,6 +15,7 @@ export const useTeachingUnits = (levelId: string, f: TeachingUnitFilters = {}) =
   if (f.search) p.set('search', f.search);
   return useQuery({
     queryKey: ['teaching-units', levelId, f],
+    enabled: !!levelId,
     queryFn: () => api<TeachingUnitListResponse>(`/levels/${levelId}/teaching-units?${p}`),
     placeholderData: keepPreviousData,
   });

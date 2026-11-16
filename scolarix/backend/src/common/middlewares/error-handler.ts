@@ -1,6 +1,7 @@
 import type { ErrorRequestHandler, RequestHandler } from 'express';
 import { Prisma } from '@prisma/client';
 import { AppError } from '../errors/AppError';
+import { uploadErrorMessage } from './upload';
 
 export const notFoundHandler: RequestHandler = (req, _res, next) => {
   next(AppError.notFound(`Route introuvable : ${req.method} ${req.path}`));
@@ -8,6 +9,7 @@ export const notFoundHandler: RequestHandler = (req, _res, next) => {
 
 /** Convertit toute erreur en réponse JSON au format { error: { code, message, details? } }. */
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+  err = uploadErrorMessage(err) ?? err;
   if (err instanceof AppError) {
     res.status(err.status).json({
       error: { code: err.code, message: err.message, ...(err.details && { details: err.details }) },
