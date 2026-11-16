@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 export const useSpecialties = (schoolId: string) =>
   useQuery({
     queryKey: ['specialties', schoolId],
+    enabled: !!schoolId,
     queryFn: () => api<{ data: SpecialtyDto[] }>(`/schools/${schoolId}/specialties`).then((r) => r.data),
   });
 

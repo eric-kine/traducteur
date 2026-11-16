@@ -10,6 +10,7 @@ import { instituteRouter } from './modules/institute/institute.routes';
 import { schoolsRouter } from './modules/schools/schools.routes';
 import { schoolSpecialtiesRouter, specialtiesRouter } from './modules/specialties/specialties.routes';
 import { levelsRouter, schoolLevelsRouter } from './modules/levels/levels.routes';
+import { levelTeachingUnitsRouter, teachingUnitsRouter } from './modules/teaching-units/teaching-units.routes';
 import { errorHandler, notFoundHandler } from './common/middlewares/error-handler';
 
 export function createApp() {
@@ -33,7 +34,9 @@ export function createApp() {
   app.use('/api/schools/:schoolId/levels', schoolLevelsRouter);
   app.use('/api/schools', schoolsRouter);
   app.use('/api/specialties', specialtiesRouter);
+  app.use('/api/levels/:levelId/teaching-units', levelTeachingUnitsRouter);
   app.use('/api/levels', levelsRouter);
+  app.use('/api/teaching-units', teachingUnitsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

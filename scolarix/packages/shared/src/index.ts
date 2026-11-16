@@ -7,3 +7,5 @@ export * from './schemas/institute.schema';
 export * from './schemas/school.schema';
 export * from './schemas/specialty.schema';
 export * from './schemas/level.schema';
+export * from './calc/teaching-unit';
+export * from './schemas/teaching-unit.schema';

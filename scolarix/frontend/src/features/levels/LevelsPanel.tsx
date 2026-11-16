@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ArrowDown, ArrowUp, Layers, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ArrowDown, ArrowUp, BookMarked, Layers, Pencil, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { LEVEL_CYCLE_LABELS, type LevelDto } from '@scolarix/shared';
 import { Badge } from '@/components/ui/badge';
@@ -46,7 +47,7 @@ export function LevelsPanel({ schoolId, canEdit }: { schoolId: string; canEdit: 
               <TableHead>Libellé</TableHead>
               <TableHead className="hidden sm:table-cell">Cycle</TableHead>
               <TableHead className="hidden text-center md:table-cell">Crédits</TableHead>
-              {canEdit && <TableHead className="text-right">Actions</TableHead>}
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -54,19 +55,24 @@ export function LevelsPanel({ schoolId, canEdit }: { schoolId: string; canEdit: 
               <TableRow key={l.id}>
                 <TableCell className="font-semibold text-muted-foreground">{l.order}</TableCell>
                 <TableCell><Badge variant="secondary" className="font-mono">{l.code}</Badge></TableCell>
-                <TableCell className="font-medium">{l.name}</TableCell>
+                <TableCell className="font-medium">
+                  <Link to={`/admin/levels/${l.id}`} className="hover:underline">{l.name}</Link>
+                </TableCell>
                 <TableCell className="hidden sm:table-cell">{LEVEL_CYCLE_LABELS[l.cycle]}</TableCell>
                 <TableCell className="hidden text-center md:table-cell">{l.requiredCredits}</TableCell>
-                {canEdit && (
-                  <TableCell>
-                    <div className="flex justify-end gap-1">
+                <TableCell>
+                  <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon" title="Unités d'enseignement" asChild>
+                      <Link to={`/admin/levels/${l.id}`}><BookMarked /></Link>
+                    </Button>
+                    {canEdit && (<>
                       <Button variant="ghost" size="icon" title="Monter" disabled={i === 0 || reorder.isPending} onClick={() => move(i, -1)}><ArrowUp /></Button>
                       <Button variant="ghost" size="icon" title="Descendre" disabled={i === data.length - 1 || reorder.isPending} onClick={() => move(i, 1)}><ArrowDown /></Button>
                       <Button variant="ghost" size="icon" title="Modifier" onClick={() => setForm({ open: true, level: l })}><Pencil /></Button>
                       <Button variant="ghost" size="icon" title="Supprimer" onClick={() => setToDelete(l)}><Trash2 className="text-destructive" /></Button>
-                    </div>
-                  </TableCell>
-                )}
+                    </>)}
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

@@ -13,7 +13,7 @@ export const useSchools = (filters: { search?: string; isActive?: '' | 'true' | 
 };
 
 export const useSchool = (id: string) =>
-  useQuery({ queryKey: ['schools', id], queryFn: () => api<{ school: SchoolDto }>(`/schools/${id}`).then((r) => r.school) });
+  useQuery({ queryKey: ['schools', id], enabled: !!id, queryFn: () => api<{ school: SchoolDto }>(`/schools/${id}`).then((r) => r.school) });
 
 function useInvalidate() {
   const qc = useQueryClient();

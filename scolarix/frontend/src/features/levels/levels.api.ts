@@ -7,6 +7,7 @@ const key = (schoolId: string) => ['levels', schoolId];
 export const useLevels = (schoolId: string) =>
   useQuery({
     queryKey: key(schoolId),
+    enabled: !!schoolId,
     queryFn: () => api<{ data: LevelDto[] }>(`/schools/${schoolId}/levels`).then((r) => r.data),
   });
 

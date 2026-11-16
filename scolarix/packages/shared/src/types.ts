@@ -85,3 +85,51 @@ export interface LevelDto {
   requiredCredits: number;
   createdAt: string;
 }
+
+export interface TeachingUnitDto {
+  id: string;
+  levelId: string;
+  specialtyId: string | null;
+  specialty: { id: string; code: string; name: string } | null;
+  code: string;
+  title: string;
+  description: string | null;
+  semester: number;
+  credits: number;
+  coefficient: number;
+  cmHours: number;
+  tdHours: number;
+  tpHours: number;
+  totalHours: number;
+  paidHours: number;
+  paidHoursAuto: boolean;
+  hourlyRate: number | null;
+  /** paidHours × hourlyRate (calculé par l'API) */
+  estimatedCost: number | null;
+  ccWeight: number;
+  examWeight: number;
+  tpWeight: number;
+  objectives: string | null;
+  prerequisites: string | null;
+  bibliography: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+/** Totaux d'une maquette (par semestre et pour l'année). */
+export interface TeachingUnitTotals {
+  count: number;
+  credits: number;
+  cmHours: number;
+  tdHours: number;
+  tpHours: number;
+  totalHours: number;
+  paidHours: number;
+  estimatedCost: number;
+}
+
+export interface TeachingUnitListResponse {
+  data: TeachingUnitDto[];
+  totals: { semester1: TeachingUnitTotals; semester2: TeachingUnitTotals; year: TeachingUnitTotals };
+  level: { id: string; code: string; name: string; requiredCredits: number; schoolId: string };
+}

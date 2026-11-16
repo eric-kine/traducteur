@@ -249,8 +249,8 @@ User ──▶ School (0..1)  // périmètre d'un agent SCOLARITE
 | **0** | Architecture & modèle de données | ✅ ce document + `schema.prisma` |
 | **0 bis** | Socle technique & authentification | ✅ JWT + rôles, utilisateurs — [`MODULE-00b-AUTH.md`](MODULE-00b-AUTH.md) |
 | **1** | Institut, écoles, spécialités, niveaux | ✅ CRUD complets, page Administration — [`MODULE-01-STRUCTURE.md`](MODULE-01-STRUCTURE.md) |
-| **2** | Années académiques & Unités d'Enseignement | Années (année courante) ; UE par niveau/spécialité, quotas CM/TD/TP, total, payé, crédits, pondérations ; maquette pédagogique |
-| **3** | Étudiants & inscriptions | CRUD étudiants, matricule auto, import CSV/Excel, inscriptions annuelles, compte étudiant |
+| **2** | Unités d'Enseignement & quotas horaires | ✅ UE par niveau, CM/TD/TP, total calculé, volume payé, taux horaire, contenu pédagogique — [`MODULE-02-UE.md`](MODULE-02-UE.md) |
+| **3** | Années académiques, étudiants & inscriptions | Années (année courante) ; CRUD étudiants, matricule auto, import CSV/Excel, inscriptions annuelles, compte étudiant |
 | **4** | Enseignants & affectations | CRUD enseignants, disponibilités, affectation aux UE, heures affectées vs quotas, heures payées |
 | **5** | Notes | Saisie par UE, moyennes UE / semestre / année, crédits, rattrapage, verrouillage, délibération |
 | **6** | Relevés de notes (PDF) | Moteur PDF Puppeteer, gabarit relevé, génération unitaire et en lot, registre + QR de vérification |

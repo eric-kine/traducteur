@@ -1,7 +1,7 @@
 # Scolarix
 
 Gestion d'un institut supérieur privé multi-écoles.
-Documentation : [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · [`docs/MODULE-00b-AUTH.md`](docs/MODULE-00b-AUTH.md) · [`docs/MODULE-01-STRUCTURE.md`](docs/MODULE-01-STRUCTURE.md)
+Documentation : [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · [`docs/MODULE-00b-AUTH.md`](docs/MODULE-00b-AUTH.md) · [`docs/MODULE-01-STRUCTURE.md`](docs/MODULE-01-STRUCTURE.md) · [`docs/MODULE-02-UE.md`](docs/MODULE-02-UE.md)
 
 ## Démarrer sur votre ordinateur
 

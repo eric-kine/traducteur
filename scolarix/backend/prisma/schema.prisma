@@ -292,33 +292,44 @@ model Level {
   @@map("levels")
 }
 
-/// Unité d'Enseignement (UE) rattachée à un niveau.
+/// Unité d'Enseignement (UE) rattachée à un niveau (donc indirectement à une école).
 /// - specialtyId = null  → UE "tronc commun" suivie par toutes les spécialités du niveau
-/// - specialtyId renseigné → UE propre à une spécialité
+/// - specialtyId renseigné → UE propre à une spécialité (de la même école)
 ///
-/// Volumes horaires :
-///   totalHours = cmHours + tdHours + tpHours  (vérifié côté service + contrainte SQL en migration)
-///   paidHours  = volume rémunéré aux enseignants (peut différer : coefficients CM×1.5, etc.)
+/// Volumes horaires (en heures, 2 décimales) :
+///   totalHours = cmHours + tdHours + tpHours   → toujours CALCULÉ par le serveur
+///                                                 (+ contrainte CHECK en base)
+///   paidHours  = volume rémunéré. Si paidHoursAuto = true, il est calculé en
+///                "équivalent TD" : CM × 1,5 + TD × 1 + TP × 1 (coefficients
+///                dans packages/shared/src/calc/teaching-unit.ts). Sinon, saisi à la main.
+///   coût estimé = paidHours × hourlyRate (calculé à l'affichage, non stocké)
 model TeachingUnit {
   id          String  @id @default(uuid())
   code        String // ex. "INF101" — unique au sein du niveau
-  title       String
+  title       String // intitulé
   description String?
   semester    Int // 1 ou 2 (semestre dans l'année du niveau)
   credits     Int // crédits ECTS
   coefficient Decimal @default(1) @db.Decimal(4, 2)
 
   // ---- Quotas horaires (en heures) ----
-  cmHours    Decimal @default(0) @db.Decimal(6, 2) // Cours magistraux
-  tdHours    Decimal @default(0) @db.Decimal(6, 2) // Travaux dirigés
-  tpHours    Decimal @default(0) @db.Decimal(6, 2) // Travaux pratiques
-  totalHours Decimal @default(0) @db.Decimal(6, 2) // = CM + TD + TP
-  paidHours  Decimal @default(0) @db.Decimal(6, 2) // Volume horaire payé
+  cmHours       Decimal  @default(0) @db.Decimal(6, 2) // Cours magistraux
+  tdHours       Decimal  @default(0) @db.Decimal(6, 2) // Travaux dirigés
+  tpHours       Decimal  @default(0) @db.Decimal(6, 2) // Travaux pratiques
+  totalHours    Decimal  @default(0) @db.Decimal(6, 2) // = CM + TD + TP (calculé)
+  paidHours     Decimal  @default(0) @db.Decimal(6, 2) // Volume horaire payé
+  paidHoursAuto Boolean  @default(true) // true = paidHours recalculé (équivalent TD) à chaque modification
+  hourlyRate    Decimal? @db.Decimal(10, 2) // Taux horaire de rémunération
 
   // ---- Pondération des notes (somme = 100) ----
   ccWeight   Int @default(40) // contrôle continu (%)
   examWeight Int @default(60) // examen final (%)
   tpWeight   Int @default(0) // note de TP (%)
+
+  // ---- Contenu pédagogique (repris par le générateur de syllabus) ----
+  objectives    String? @db.Text // objectifs pédagogiques
+  prerequisites String? @db.Text // prérequis
+  bibliography  String? @db.Text // références bibliographiques
 
   isActive Boolean @default(true)
 
@@ -337,6 +348,7 @@ model TeachingUnit {
   updatedAt DateTime @updatedAt
 
   @@unique([levelId, code])
+  @@index([levelId, semester])
   @@index([specialtyId])
   @@map("teaching_units")
 }
